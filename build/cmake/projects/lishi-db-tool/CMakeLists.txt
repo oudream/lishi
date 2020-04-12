@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(hello_widgetweb1 LANGUAGES CXX)
+project(lishi-db-tool LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -27,58 +27,48 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt5 COMPONENTS Widgets Core Gui Xml Network REQUIRED)
 find_package(Qt5 COMPONENTS WebEngineCore WebEngine WebEngineWidgets WebView WebChannel WebSockets REQUIRED)
 
-set(TS_FILES widgetweb1_zh_CN.ts)
+set(TS_FILES lishi-db-tool_zh_CN.ts)
 set(QRC_FILES data/simplebrowser.qrc)
 
 set(SOURCE_FILES
         # h
-        browser.h
-        browserwindow.h
-        downloadmanagerwidget.h
-        downloadwidget.h
-        tabwidget.h
-        webpage.h
-        webpopupwindow.h
-        webview.h
+        mainwindow.h
         # cpp
-        browser.cpp
-        browserwindow.cpp
-        downloadmanagerwidget.cpp
-        downloadwidget.cpp
         main.cpp
-        tabwidget.cpp
-        webpage.cpp
-        webpopupwindow.cpp
-        webview.cpp
+        mainwindow.cpp
         # ui
-        certificateerrordialog.ui
-        passworddialog.ui
-        downloadmanagerwidget.ui
-        downloadwidget.ui
+        mainwindow.ui
         #
         ${TS_FILES}
         #
         ${QRC_FILES}
         )
 
-mc_merge_file_path(${gs_project_hello_path}/widgetweb1 "${SOURCE_FILES}" SOURCE_FILEPATHS)
+mc_merge_file_path(${gs_project_projects_path}/lishi-db-tool "${SOURCE_FILES}" SOURCE_FILEPATHS)
+
+include_directories(./../../ccxx/ccxx.cmake)
 
 if(ANDROID)
-  add_library(hello_widgetweb1 SHARED
+  add_library(lishi-db-tool SHARED
     ${SOURCE_FILEPATHS}
   )
 else()
-  add_executable(hello_widgetweb1
+  add_executable(lishi-db-tool
     ${SOURCE_FILEPATHS}
   )
 endif()
 
-target_link_libraries(hello_widgetweb1 PRIVATE
+target_link_libraries(lishi-db-tool PRIVATE
         Qt5::WebEngineCore
         Qt5::WebEngine
         Qt5::WebEngineWidgets
         Qt5::WebView
         Qt5::WebChannel
-        Qt5::Widgets)
+        Qt5::Widgets
+        )
+
+target_link_libraries(lishi-db-tool
+        ccxx
+        )
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

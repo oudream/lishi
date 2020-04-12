@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(mainwindow1 LANGUAGES CXX)
+project(hello_mainwindow1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -41,15 +41,15 @@ set(SOURCE_FILES
 mc_merge_file_path(${gs_project_hello_path}/mainwindow1 "${SOURCE_FILES}" SOURCE_FILEPATHS)
 
 if (ANDROID)
-    add_library(mainwindow1 SHARED
+    add_library(hello_mainwindow1 SHARED
             ${SOURCE_FILEPATHS}
             )
 else ()
-    add_executable(mainwindow1
+    add_executable(hello_mainwindow1
             ${SOURCE_FILEPATHS}
             )
 endif ()
 
-target_link_libraries(mainwindow1 PRIVATE Qt5::Widgets)
+target_link_libraries(hello_mainwindow1 PRIVATE Qt5::Widgets)
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

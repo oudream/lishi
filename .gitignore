@@ -75,3 +75,4 @@ Thumbs.db
 # This file is used to ignore files which are custom
 # ----------------------------------------------------------------------------
 .idea
+cmake-*

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(hello_widgetweb1 LANGUAGES CXX)
+project(hello_widgetweb2 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -27,7 +27,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(Qt5 COMPONENTS Widgets Core Gui Xml Network REQUIRED)
 find_package(Qt5 COMPONENTS WebEngineCore WebEngine WebEngineWidgets WebView WebChannel WebSockets REQUIRED)
 
-set(TS_FILES widgetweb1_zh_CN.ts)
+set(TS_FILES widgetweb2_zh_CN.ts)
 set(QRC_FILES data/simplebrowser.qrc)
 
 set(SOURCE_FILES
@@ -40,6 +40,7 @@ set(SOURCE_FILES
         webpage.h
         webpopupwindow.h
         webview.h
+        mainwindow.h
         # cpp
         browser.cpp
         browserwindow.cpp
@@ -50,30 +51,32 @@ set(SOURCE_FILES
         webpage.cpp
         webpopupwindow.cpp
         webview.cpp
+        mainwindow.cpp
         # ui
         certificateerrordialog.ui
         passworddialog.ui
         downloadmanagerwidget.ui
         downloadwidget.ui
+        mainwindow.ui
         #
         ${TS_FILES}
         #
         ${QRC_FILES}
         )
 
-mc_merge_file_path(${gs_project_hello_path}/widgetweb1 "${SOURCE_FILES}" SOURCE_FILEPATHS)
+mc_merge_file_path(${gs_project_hello_path}/widgetweb2 "${SOURCE_FILES}" SOURCE_FILEPATHS)
 
 if(ANDROID)
-  add_library(hello_widgetweb1 SHARED
+  add_library(hello_widgetweb2 SHARED
     ${SOURCE_FILEPATHS}
   )
 else()
-  add_executable(hello_widgetweb1
+  add_executable(hello_widgetweb2
     ${SOURCE_FILEPATHS}
   )
 endif()
 
-target_link_libraries(hello_widgetweb1 PRIVATE
+target_link_libraries(hello_widgetweb2 PRIVATE
         Qt5::WebEngineCore
         Qt5::WebEngine
         Qt5::WebEngineWidgets

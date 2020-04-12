@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(hello_widgetweb1 LANGUAGES CXX)
+project(widgetweb1 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -31,7 +31,6 @@ set(TS_FILES widgetweb1_zh_CN.ts)
 set(QRC_FILES data/simplebrowser.qrc)
 
 set(SOURCE_FILES
-        # h
         browser.h
         browserwindow.h
         downloadmanagerwidget.h
@@ -40,7 +39,6 @@ set(SOURCE_FILES
         webpage.h
         webpopupwindow.h
         webview.h
-        # cpp
         browser.cpp
         browserwindow.cpp
         downloadmanagerwidget.cpp
@@ -50,35 +48,34 @@ set(SOURCE_FILES
         webpage.cpp
         webpopupwindow.cpp
         webview.cpp
-        # ui
         certificateerrordialog.ui
         passworddialog.ui
         downloadmanagerwidget.ui
         downloadwidget.ui
-        #
-        ${TS_FILES}
-        #
-        ${QRC_FILES}
         )
 
-mc_merge_file_path(${gs_project_hello_path}/widgetweb1 "${SOURCE_FILES}" SOURCE_FILEPATHS)
-
 if(ANDROID)
-  add_library(hello_widgetweb1 SHARED
-    ${SOURCE_FILEPATHS}
+  add_library(widgetweb1 SHARED
+    ${SOURCE_FILES}
+    ${TS_FILES}
+    ${QRC_FILES}
   )
 else()
-  add_executable(hello_widgetweb1
-    ${SOURCE_FILEPATHS}
+  add_executable(widgetweb1
+    ${SOURCE_FILES}
+    ${TS_FILES}
+    ${QRC_FILES}
   )
 endif()
 
-target_link_libraries(hello_widgetweb1 PRIVATE
+target_link_libraries(widgetweb1 PRIVATE
+        Qt5::Widgets
         Qt5::WebEngineCore
         Qt5::WebEngine
         Qt5::WebEngineWidgets
         Qt5::WebView
         Qt5::WebChannel
-        Qt5::Widgets)
+        Qt5::WebSockets
+        )
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

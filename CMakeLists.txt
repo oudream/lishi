@@ -14,6 +14,7 @@ set(gs_project_path ${CMAKE_CURRENT_SOURCE_DIR})
 set(gs_project_include_path ${gs_project_path}/include)
 set(gs_project_3rd_path ${gs_project_path}/3rd)
 set(gs_project_hello_path ${gs_project_path}/hello)
+set(gs_project_projects_path ${gs_project_path}/projects)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/modules")
 
