@@ -26,25 +26,29 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 
-set(TS_FILES mainwindow1_zh_CN.ts)
+set(TS_FILES
+        mainwindow1_zh_CN.ts
+        )
 
-if(ANDROID)
-  add_library(mainwindow1 SHARED
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
-    ${TS_FILES}
-  )
-else()
-  add_executable(mainwindow1
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
-    ${TS_FILES}
-  )
-endif()
+set(SOURCE_FILES
+        main.cpp
+        mainwindow.cpp
+        mainwindow.h
+        mainwindow.ui
+        ${TS_FILES}
+        )
+
+mc_merge_file_path(${gs_project_hello_path}/mainwindow1 "${SOURCE_FILES}" SOURCE_FILEPATHS)
+
+if (ANDROID)
+    add_library(mainwindow1 SHARED
+            ${SOURCE_FILEPATHS}
+            )
+else ()
+    add_executable(mainwindow1
+            ${SOURCE_FILEPATHS}
+            )
+endif ()
 
 target_link_libraries(mainwindow1 PRIVATE Qt5::Widgets)
 

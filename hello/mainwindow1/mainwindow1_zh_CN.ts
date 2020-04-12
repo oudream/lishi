@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="untitled1_zh_CN">
+<TS version="2.1" language="mainwindow1_zh_CN">
 <context>
     <name>MainWindow</name>
     <message>
