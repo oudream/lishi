@@ -76,3 +76,8 @@ Thumbs.db
 # ----------------------------------------------------------------------------
 .idea
 cmake-*
+/build/alignerchen/
+/build/deploy/log/
+/build/deploy/temp/
+/build/deploy/unix/
+CMakeLists.txt.user

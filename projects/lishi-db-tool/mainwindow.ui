@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>力狮 - 数据库工具</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
@@ -45,11 +45,11 @@
           </attribute>
           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
+            <layout class="QVBoxLayout" name="verticalLayout">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_2">
                <item>
-                <widget class="QLineEdit" name="dcInputEd1">
+                <widget class="QLineEdit" name="dcEd1">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -65,7 +65,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="dcClickBn1">
+                <widget class="QPushButton" name="dcBn1">
                  <property name="minimumSize">
                   <size>
                    <width>0</width>
@@ -86,12 +86,12 @@
               </layout>
              </item>
              <item>
-              <widget class="QListView" name="dcListView1"/>
+              <widget class="QListWidget" name="dcLw1"/>
              </item>
             </layout>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_3">
+            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,1">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
                <item>
@@ -102,7 +102,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="dcClickBn2">
+                <widget class="QPushButton" name="dcBn2">
                  <property name="text">
                   <string>删除</string>
                  </property>
@@ -111,7 +111,10 @@
               </layout>
              </item>
              <item>
-              <widget class="QListView" name="dcListView2"/>
+              <widget class="QListWidget" name="dcLw2"/>
+             </item>
+             <item>
+              <widget class="QWidget" name="widget" native="true"/>
              </item>
             </layout>
            </item>
@@ -121,7 +124,7 @@
           <attribute name="title">
            <string>[ 删除数据 - 语言 ]</string>
           </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
@@ -132,7 +135,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="dlBn1">
                <property name="text">
                 <string>删除</string>
                </property>
@@ -141,7 +144,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QListView" name="listView"/>
+            <widget class="QListWidget" name="dlLw1"/>
            </item>
           </layout>
          </widget>
@@ -164,6 +167,16 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <tabstops>
+  <tabstop>dcEd1</tabstop>
+  <tabstop>dcBn1</tabstop>
+  <tabstop>dcLw1</tabstop>
+  <tabstop>dcLw2</tabstop>
+  <tabstop>dcBn2</tabstop>
+  <tabstop>dlBn1</tabstop>
+  <tabstop>dlLw1</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

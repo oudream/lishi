@@ -1,3 +1,5 @@
+include(./../../ccxx/ccxx.cmake)
+
 set(SOURCE_FILES
         main_odbc1.cpp
         )

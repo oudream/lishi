@@ -46,17 +46,21 @@ set(SOURCE_FILES
 
 mc_merge_file_path(${gs_project_projects_path}/lishi-db-tool "${SOURCE_FILES}" SOURCE_FILEPATHS)
 
-include_directories(./../../ccxx/ccxx.cmake)
+include(./../../ccxx/ccxx.cmake)
+mc_ccxx_qt_include()
+mc_ccxx_sqlite_include()
 
-if(ANDROID)
-  add_library(lishi-db-tool SHARED
-    ${SOURCE_FILEPATHS}
-  )
-else()
-  add_executable(lishi-db-tool
-    ${SOURCE_FILEPATHS}
-  )
-endif()
+if (ANDROID)
+    add_library(lishi-db-tool SHARED
+            ${SOURCE_FILEPATHS}
+            ${gsl_ccxx_qt_filepaths}
+            )
+else ()
+    add_executable(lishi-db-tool
+            ${SOURCE_FILEPATHS}
+            ${gsl_ccxx_qt_filepaths}
+            )
+endif ()
 
 target_link_libraries(lishi-db-tool PRIVATE
         Qt5::WebEngineCore
@@ -65,10 +69,8 @@ target_link_libraries(lishi-db-tool PRIVATE
         Qt5::WebView
         Qt5::WebChannel
         Qt5::Widgets
-        )
-
-target_link_libraries(lishi-db-tool
         ccxx
+        ccxx_database_sqlite
         )
 
 qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

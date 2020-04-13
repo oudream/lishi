@@ -2,10 +2,19 @@
 
 #include <QApplication>
 
-int main(int argc, char **argv)
+#include <ccxx/cxapplication_qt.h>
+
+using namespace std;
+
+int main(int argc, const char **argv)
 {
-    QApplication a(argc, argv);
+    CxApplicationQt::init(argc, argv);
+
+    QApplication app(argc, (char **)argv);
     MainWindow w;
     w.show();
-    return a.exec();
+
+    int result = CxApplicationQt::exec();
+
+    return result;
 }
