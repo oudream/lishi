@@ -24,7 +24,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    endif()
 #endif()
 
-find_package(Qt5 COMPONENTS Widgets Core Gui Xml Network REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Core Gui REQUIRED)
+find_package(Qt5 COMPONENTS LinguistTools REQUIRED)
 find_package(Qt5 COMPONENTS WebEngineCore WebEngine WebEngineWidgets WebView WebChannel WebSockets REQUIRED)
 
 set(TS_FILES lishi-db-tool_zh_CN.ts)

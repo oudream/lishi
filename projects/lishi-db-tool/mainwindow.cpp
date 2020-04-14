@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+#include <QFileDialog>
 #include <QListView>
 #include <QListWidgetItem>
 
@@ -200,7 +201,7 @@ using namespace std;
 
 QUrl f_url = QUrl(QStringLiteral("http://news.baidu.com/"));
 string f_fpDb = "";
-CxDatabase * f_db = NULL;
+CxDatabase *f_db = NULL;
 
 int fn_init()
 {
@@ -229,16 +230,16 @@ int fn_helloDb1()
         cxPromptCheck(f_db->execSql(CREATE_T1), return false);
     }
 
-    SQL::Con db((sqlite3 *)f_db->getDb());
+    SQL::Con db((sqlite3 *) f_db->getDb());
 
     auto a = db.bindnquery<int, double, string, string, int>("SELECT f1, f2, f3, f4, f4 from t1  ;");
 //    a.push_back(db.bindnquery<double, std::string>("Select 3.33333333, 3.3;")[0]);
     std::cout << "erg :" << std::endl;
     for (auto x:a)
     {
-        int i =  std::get<0>(x);
-        double d =  std::get<1>(x);
-        string s =  std::get<2>(x);
+        int i = std::get<0>(x);
+        double d = std::get<1>(x);
+        string s = std::get<2>(x);
         std::cout << i << " " << d << " " << s << " " << std::get<4>(x) << " " << std::endl;
     }
 //    std::cout << std::endl <<  "query mit binds: " << std::endl;
@@ -270,19 +271,21 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->dlBn1, SIGNAL(clicked()), this, SLOT(dlBn1ClickedSlot()));
 //    connect(ui->dcLw1, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(dcLw1currentItemChanged()));
 
-    QListWidget *lw = ui->dcLw1;
-
     fn_init();
     fn_helloDb1();
 
-    SQL::Con db((sqlite3 *)f_db->getDb());
+    ui->buPathEd->setText(CxQString::gbkToQString(CxAppEnv::dataPath()));
+    ui->buFileNameEd->setText(CxQString::gbkToQString(
+        CxFileSystem::extractFilePrefixName(f_fpDb) + "-" + CxTime::currentDayString('-') + ".db"));
+
+    SQL::Con db((sqlite3 *) f_db->getDb());
 
     {
         string sSql = "SELECT ManID, ManName, ManLogo FROM Man;";
         sqlite3 *db = (sqlite3 *) f_db->getDb();
         int rc, ncols;
-        sqlite3_stmt* stmt;
-        const char* tail;
+        sqlite3_stmt *stmt;
+        const char *tail;
         rc = sqlite3_prepare(db, sSql.c_str(), sSql.size(), &stmt, &tail);
         if (rc != SQLITE_OK)
         {
@@ -301,38 +304,38 @@ MainWindow::MainWindow(QWidget *parent)
                 {
                     case SQLITE_INTEGER:
                     {
-                        const unsigned char* pch = sqlite3_column_text(stmt, i);
+                        const unsigned char *pch = sqlite3_column_text(stmt, i);
                         if (pch)
-                            sValue = string((const char*) pch);
+                            sValue = string((const char *) pch);
                     }
                         break;
                     case SQLITE_FLOAT:
                     {
-                        const unsigned char* pch = sqlite3_column_text(stmt, i);
+                        const unsigned char *pch = sqlite3_column_text(stmt, i);
                         if (pch)
-                            sValue = string((const char*) pch);
+                            sValue = string((const char *) pch);
                     }
                         break;
                     case SQLITE_BLOB:
                     {
                         int len = sqlite3_column_bytes(stmt, i);
-                        const void * pch = sqlite3_column_blob(stmt, i);
+                        const void *pch = sqlite3_column_blob(stmt, i);
                         if (pch)
-                            sValue = string((const char*) pch, len);
+                            sValue = string((const char *) pch, len);
                     }
                         break;
                     case SQLITE3_TEXT:
                     {
-                        const unsigned char* pch = sqlite3_column_text(stmt, i);
+                        const unsigned char *pch = sqlite3_column_text(stmt, i);
                         if (pch)
-                            sValue = string((const char*) pch);
+                            sValue = string((const char *) pch);
                     }
                         break;
                     default:
                     {
-                        const unsigned char* pch = sqlite3_column_text(stmt, i);
+                        const unsigned char *pch = sqlite3_column_text(stmt, i);
                         if (pch)
-                            sValue = string((const char*) pch);
+                            sValue = string((const char *) pch);
                     }
                         break;
                 }
@@ -345,9 +348,9 @@ MainWindow::MainWindow(QWidget *parent)
 
         for (int i = 0; i < rows.size(); ++i)
         {
-            vector<string> & row = rows[i];
-            string sManName =  row[1];
-            string sManLogo =  row[2];
+            vector<string> &row = rows[i];
+            string sManName = row[1];
+            string sManLogo = row[2];
 //            CxFile::save(CxFileSystem::mergeFilePath(CxAppEnv::tempPath(), sManName + ".png"), sManLogo);
         }
     }
@@ -356,24 +359,27 @@ MainWindow::MainWindow(QWidget *parent)
     std::cout << "erg :" << std::endl;
     for (auto x:a)
     {
-        int iManID =  std::get<0>(x);
-        string sManName =  std::get<1>(x);
-        vector<char> sManLogo =  std::get<2>(x);
+        int iManID = std::get<0>(x);
+        string sManName = std::get<1>(x);
+        vector<char> sManLogo = std::get<2>(x);
 //        CxFile::save(CxFileSystem::mergeFilePath(CxAppEnv::tempPath(), sManName + ".png"), string(sManLogo.data(), sManLogo.size()));
         std::cout << iManID << " " << sManName << " " << std::endl;
         QPixmap pm;
-        pm.loadFromData((const uchar *)sManLogo.data(), (uint)sManLogo.size(), "JFIF");
-        QListWidgetItem *item = new QListWidgetItem(QIcon(pm),  CxQString::gbkToQString(sManName));
-        lw->addItem(item);
+        pm.loadFromData((const uchar *) sManLogo.data(), (uint) sManLogo.size(), "JFIF");
+        QListWidgetItem *item = new QListWidgetItem(QIcon(pm), CxQString::gbkToQString(sManName));
+        ui->dcLw1->addItem(item);
     }
 
+    QFile file(CxQString::gbkToQString(CxFileSystem::mergeFilePath(CxAppEnv::configPath(), "Aqua.qss")));
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    setStyleSheet(styleSheet);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
 
 void MainWindow::dcBn2ClickedSlot()
 {
@@ -398,8 +404,8 @@ void MainWindow::on_dcEd1_textChanged(const QString &arg1)
 void MainWindow::on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
     string s = CxQString::gbkToStdString(current->text());
-    SQL::Con db((sqlite3 *)f_db->getDb());
-    QListWidget * lw = ui->dcLw2;
+    SQL::Con db((sqlite3 *) f_db->getDb());
+    QListWidget *lw = ui->dcLw2;
     lw->clear();
     for (auto row: db.bindnquery<string, double, double, double, double, double>(CxString::format("SELECT ModelName, FToeMin, FToeMax, FToe, FToeSumMin, FToeSumMax FROM Vehicle WHERE ManName == '%s'", s.c_str())))
     {
@@ -411,4 +417,52 @@ void MainWindow::on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidg
 void MainWindow::on_dcLw2_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
 
+}
+
+void MainWindow::on_buPathBn_clicked()
+{
+    QString dir = QFileDialog::getExistingDirectory(this, tr("选择备份的目录"),
+                                                    CxQString::gbkToQString(CxAppEnv::dataPath()),
+                                                    QFileDialog::ShowDirsOnly
+                                                    | QFileDialog::DontResolveSymlinks);
+}
+
+void MainWindow::on_buRunBn_clicked()
+{
+    string p = CxQString::gbkToStdString(ui->buPathEd->text());
+    string f = CxQString::gbkToStdString(ui->buFileNameEd->text());
+    string dst = CxFileSystem::mergeFilePath(p, f);
+    string src = f_fpDb;
+    string st = "失败";
+    string msg = "备份文件到：" + dst;
+    if (CxFileSystem::isExist(dst))
+    {
+        if (CxQDialog::ShowQuery(CxQString::gbkToQString(msg + "\n\n文件已存在，请确认是否要覆盖？")))
+        {
+            if (!CxFileSystem::deleteFile(dst))
+            {
+                CxQDialog::ShowPrompt("删除文件失败，备份停止！");
+                return;
+            }
+        }
+        else
+        {
+            return;
+        }
+    }
+    if (CxFileSystem::copyFile(src, dst) > 0)
+    {
+        st = "完成";
+    }
+    outInfo(msg + ". " + st + ". " + CxTime::currentSystemTimeString());
+}
+
+void MainWindow::outInfo(const QString &s)
+{
+    ui->statusbar->showMessage(s);
+}
+
+void MainWindow::outInfo(const std::string &s)
+{
+    outInfo(CxQString::gbkToQString(s));
 }

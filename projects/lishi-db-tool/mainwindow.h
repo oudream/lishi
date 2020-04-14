@@ -18,6 +18,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void outInfo(const QString & s);
+
+    void outInfo(const std::string & s);
+
 private slots:
     void dcBn1ClickedSlot();
 
@@ -30,6 +34,10 @@ private slots:
     void on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
     void on_dcLw2_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+
+    void on_buPathBn_clicked();
+
+    void on_buRunBn_clicked();
 
 private:
     Ui::MainWindow *ui;

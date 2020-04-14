@@ -12,7 +12,7 @@
   </property>
   <property name="font">
    <font>
-    <pointsize>16</pointsize>
+    <pointsize>15</pointsize>
    </font>
   </property>
   <property name="windowTitle">
@@ -30,6 +30,11 @@
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="0">
         <widget class="QTabWidget" name="tabWidget">
+         <property name="font">
+          <font>
+           <pointsize>15</pointsize>
+          </font>
+         </property>
          <property name="tabPosition">
           <enum>QTabWidget::North</enum>
          </property>
@@ -37,11 +42,11 @@
           <enum>QTabWidget::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
-         <widget class="QWidget" name="tab1">
+         <widget class="QWidget" name="dcTab">
           <attribute name="title">
-           <string>[ 删除数据 - CAR ]</string>
+           <string>[ 删除数据 - VEH ]</string>
           </attribute>
           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
            <item>
@@ -77,6 +82,11 @@
                    <width>0</width>
                    <height>0</height>
                   </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>16</pointsize>
+                  </font>
                  </property>
                  <property name="text">
                   <string>查询</string>
@@ -120,7 +130,7 @@
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab2">
+         <widget class="QWidget" name="dlTab">
           <attribute name="title">
            <string>[ 删除数据 - 语言 ]</string>
           </attribute>
@@ -145,6 +155,94 @@
            </item>
            <item>
             <widget class="QListWidget" name="dlLw1"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="buTab">
+          <attribute name="title">
+           <string>[ 备份数据 - DB ]</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="3,1">
+             <item>
+              <widget class="QLineEdit" name="buPathEd"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buPathBn">
+               <property name="text">
+                <string>备份目录</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="3,1">
+             <item>
+              <widget class="QLineEdit" name="buFileNameEd"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton_2">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>文件名</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,1,2">
+             <item>
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="buRunBn">
+               <property name="text">
+                <string>执行备份</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
