@@ -26,6 +26,8 @@ public:
     static int maxVehId();
     static void setMaxVehId(int id);
 
+    static int currentLanID();
+
     static std::map<int, std::string> langInfos();
 
 };

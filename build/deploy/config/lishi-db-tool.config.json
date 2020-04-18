@@ -1,0 +1,14 @@
+{
+  "dbname": "root",
+  "tables": [
+    {
+      "tbname": "system",
+      "rows": [
+        {
+          "qss": "Aqua.qss",
+          "LanID": 1033
+        }
+      ]
+    }
+  ]
+}

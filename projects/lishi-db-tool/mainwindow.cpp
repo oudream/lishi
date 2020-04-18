@@ -29,42 +29,9 @@
 #include "sqlite3template.hpp"
 #include "config.h"
 
-class Vehicle {
-public:
-    int VehID; std::string ModelName, ModelPy;
-    std::string BeginDT, EndDT;
-    double Wheelbase, TrackDia;
-    double FTreadWidth, RTreadWidth;
-
-    double FToeMin, FToe, FToeMax;
-    double FCamberMin, FCamber, FCamberMax;
-    double KpiCasterMin, KpiCaster, KpiCasterMax;
-    double KpiCamberMin, KpiCamber, KpiCamberMax;
-
-    double RToeMin, RToe, RToeMax;
-    double RCamberMin, RCamber, RCamberMax;
-    double RThrustMin, RThrust, RThrustMax;
-
-
-//    Vehicle(int aVehID, string aModelName, string aModelPy,
-//            string aBeginDT, string aEndDT,
-//            double aWheelbase, double aTrackDia,
-//            double aFTreadWidth, double aRTreadWidth,
-//            double aFToeMin, double aFToe, double aFToeMax,
-//            double aFCamberMin, double aFCamber, double aFCamberMax,
-//            double aKpiCasterMin, double aKpiCaster, double aKpiCasterMax,
-//            double aKpiCamberMin, double aKpiCamber, double aKpiCamberMax,
-//            double aRToeMin, double aRToe, double aRToeMax,
-//            double aRCamberMin, double aRCamber, double aRCamberMax,
-//            double aRThrustMin, double aRThrust, double aRThrustMax)
-//    {
-//
-//    }
-
-};
-
 using namespace std;
 
+vector<Man> f_mans;
 vector<Vehicle> f_vehicles;
 
 int fn_helloDb1()
@@ -116,8 +83,8 @@ int fn_helloDb1()
         cout << iChange << endl;
         cout << iTotalChange << endl;
 
-        sqlite3_stmt* stmt;
-        const char* tail;
+        sqlite3_stmt *stmt;
+        const char *tail;
         int rc = sqlite3_prepare(db, sSql.c_str(), sSql.size(), &stmt, &tail);
         if (rc != SQLITE_OK)
         {
@@ -132,11 +99,11 @@ int fn_helloDb1()
             }
             sqlite3_bind_int(stmt, 1, i * i);
             sqlite3_bind_double(stmt, 2, i * i * 123.456);
-            char buffer [50];
-            sprintf (buffer, "i = %d, i * i is %d", i, i * i);
+            char buffer[50];
+            sprintf(buffer, "i = %d, i * i is %d", i, i * i);
             sqlite3_bind_text(stmt, 3, buffer, strlen(buffer), 0);
             sqlite3_bind_blob(stmt, 4, buffer, 50, 0);
-            sqlite3_bind_int64(stmt, 1, (sqlite3_int64)i * i + i);
+            sqlite3_bind_int64(stmt, 1, (sqlite3_int64) i * i + i);
             rc = sqlite3_step(stmt);
             if (rc != SQLITE_OK && rc != SQLITE_DONE)
             {
@@ -156,10 +123,13 @@ int fn_helloDb1()
         vector<tuple<int, double, string, vector<char>, int>> rows;
         for (int i = 0; i < 10; ++i)
         {
-            char buffer [50];
-            sprintf (buffer, "i = %d, i * i is %d", i, i * i);
-            vector<char> image{static_cast<char>(1*i), static_cast<char>(2*i), static_cast<char>(3*i), static_cast<char>(4*i), static_cast<char>(5*i)};
-            rows.push_back(std::tuple<int, double, string, vector<char>, int> (i, i * i * 123.456, string(buffer), image, i * i * i));
+            char buffer[50];
+            sprintf(buffer, "i = %d, i * i is %d", i, i * i);
+            vector<char> image{static_cast<char>(1 * i), static_cast<char>(2 * i), static_cast<char>(3 * i),
+                               static_cast<char>(4 * i), static_cast<char>(5 * i)};
+            rows.push_back(std::tuple<int, double, string, vector<char>, int>(i,
+                                                                              i * i * 123.456, string(buffer), image,
+                                                                              i * i * i));
         }
         int r = db.bindnexec<int, double, string, vector<char>, int>(sSql, rows);
         std::cout << "bindnexec :" << r << std::endl;
@@ -183,6 +153,19 @@ int fn_createVehimage()
     if (CxString::toInt32(sCount) <= 0)
     {
         cxPromptCheck(Config::mainDb()->execSql(CREATE_T1), return false);
+    }
+
+    return 0;
+}
+
+int fn_cleanupDb()
+{
+    string sCount;
+    sCount = Config::mainDb()->queryValue("select count(VehID) from Vehicle where VehID is null or VehID = 0;");
+    if (CxString::toInt32(sCount) > 0)
+    {
+        int result = Config::mainDb()->execSql("DELETE FROM Vehicle WHERE VehID is null or VehID = 0;");
+        cxPrompt() << "DELETE FROM Vehicle : " << result;
     }
 
     return 0;
@@ -268,7 +251,6 @@ int fn_helloDb2()
     return 0;
 }
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -280,7 +262,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     initMenu();
 
-    refreshDcMan("");
+    initMan("");
 }
 
 MainWindow::~MainWindow()
@@ -310,10 +292,16 @@ void MainWindow::on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidg
     refreshDcVeh(sMan, "");
 }
 
-
 void MainWindow::on_dcLw2_currentRowChanged(int currentRow)
 {
-    viewDcVeh(currentRow);
+    if (f_vehicles.size() <= 0 || currentRow < 0 || currentRow >= f_vehicles.size())
+    {
+        return;
+    }
+
+    Vehicle &veh = f_vehicles[currentRow];
+    viewOutDcVeh(veh);
+    ui->dcBn61->setEnabled(true);
 }
 
 void MainWindow::outInfo(const QString &s)
@@ -354,11 +342,43 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 
 void MainWindow::initData()
 {
+    _qssFilePath = CxFileSystem::mergeFilePath(CxAppEnv::resPath(), CxAppEnv::findConfig(string("system"), string("qss"), string()));
+    cxPrompt() << "_qssFilePath: " << _qssFilePath;
+
 //    fn_helloDb1();
 
 //    fn_helloDb2();
 
+    fn_cleanupDb();
+
     fn_createVehimage();
+}
+
+/**
+ * @param sFilter
+ */
+int MainWindow::initMan()
+{
+    string sql = "SELECT ManID, ManName, ManPy, ManLogo FROM Man;";
+//    string fl = CxString::trim(sFilter);
+//    if (fl.size() > 0)
+//    {
+//        string flUp = CxString::toUpper(fl);
+//        sql = CxString::format("SELECT ManID, ManName, ManPy, ManLogo FROM Man WHERE ManName LIKE '\\%%s\\%' OR AND UPPER(ManName) like '\\%%s\\%' OR ManPy LIKE '\\%%s\\%' OR AND UPPER(ManPy) like '\\%%s\\%'", fl.c_str(), flUp.c_str(), fl.c_str(), flUp.c_str());
+//    }
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+    auto a = db.bindnquery<int, string, string, vector<char>>(sql);
+    f_mans.clear();
+    for (auto x:a)
+    {
+        Man man;
+        man.ManID = std::get<0>(x);
+        man.ManName = std::get<1>(x);
+        man.ManPy = std::get<2>(x);
+        man.ManLogo = std::get<3>(x);
+        f_mans.push_back(man);
+    }
+    return f_mans.size();
 }
 
 void MainWindow::initUi()
@@ -377,7 +397,11 @@ void MainWindow::initUi()
     ui->dcImage1->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
     ui->dcImage2->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
     ui->dcImage3->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
-    setQss("Aqua.qss");
+    ui->dcImageEd1->setVisible(false);
+    ui->dcImageEd2->setVisible(false);
+    ui->dcImageEd3->setVisible(false);
+
+    CxQWidget::setQSS(this, _qssFilePath);
 }
 
 void MainWindow::initMenu()
@@ -395,55 +419,34 @@ void MainWindow::initMenu()
     ui->dcImage3->installEventFilter(this);
 }
 
-void MainWindow::setQss(const std::string& fn)
+void MainWindow::refreshDcMan(const string &sFilter)
 {
-    QFile file(CxQString::gbkToQString(CxFileSystem::mergeFilePath(CxAppEnv::configPath(), fn)));
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
-}
-
-/**
- * @param sFilter
- */
-void MainWindow::refreshDcMan(const std::string &sFilter)
-{
-    string sql = "SELECT ManID, ManName, ManPy, ManLogo FROM Man;";
-    string fl = CxString::trim(sFilter);
-    if (fl.size() > 0)
-    {
-        string flUp = CxString::toUpper(fl);
-        sql = CxString::format("SELECT ManID, ManName, ManPy, ManLogo FROM Man WHERE ManName LIKE '\\%%s\\%' OR AND UPPER(ManName) like '\\%%s\\%' OR ManPy LIKE '\\%%s\\%' OR AND UPPER(ManPy) like '\\%%s\\%'", fl.c_str(), flUp.c_str(), fl.c_str(), flUp.c_str());
-    }
-
-    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
-    auto a = db.bindnquery<int, string, string, vector<char>>(sql);
     ui->dcLw1->clear();
-    for (auto x:a)
+    string sub = sFilter;
+    for (int i = 0; i < f_mans.size(); ++i)
     {
-        int iManID = std::get<0>(x);
-        string sManName = std::get<1>(x);
-        string sManPy = std::get<2>(x);
-        vector<char> sManLogo = std::get<3>(x);
-//        CxFile::save(CxFileSystem::mergeFilePath(CxAppEnv::tempPath(), sManName + ".png"), string(sManLogo.data(), sManLogo.size()));
-        std::cout << iManID << " " << sManName << " " << std::endl;
+        Man &man = f_mans[i];
+        if (sub.size()>0)
+        {
+            if ( ! CxString::containCase(man.ManName, sub) && ! CxString::containCase(man.ManPy, sub))
+            {
+                continue;
+            }
+        }
         QPixmap pm;
-        pm.loadFromData((const uchar *) sManLogo.data(), (uint) sManLogo.size(), "JFIF");
-        QListWidgetItem *item = new QListWidgetItem(QIcon(pm), CxQString::gbkToQString(sManName));
+        pm.loadFromData((const uchar *) man.ManLogo.data(), (uint) man.ManLogo.size(), "JFIF");
+        QListWidgetItem *item = new QListWidgetItem(QIcon(pm), CxQString::gbkToQString(man.ManName));
         ui->dcLw1->addItem(item);
     }
-//    if (ui->dcLw1->count() > 0)
-//    {
-//        ui->dcLw1->setCurrentRow(0);
-//    }
 }
 
 /**
  * @param sFilter
  */
-void MainWindow::refreshDcVeh(const std::string& sMan, const std::string &sFilter)
+void MainWindow::refreshDcVeh(const std::string &sMan, const std::string &sFilter)
 {
-    string fields = " VehID, ModelName, ModelPy,"
+    string fields = " ManID, ManName, ManPy,"
+                    " VehID, ModelName, ModelPy,"
                     " BeginDT, EndDT,"
                     " Wheelbase, TrackDia,"
                     " FTreadWidth, RTreadWidth,"
@@ -463,52 +466,61 @@ void MainWindow::refreshDcVeh(const std::string& sMan, const std::string &sFilte
         sql = CxString::format("SELECT %s FROM Vehicle WHERE ManName='%s' AND ( ModelName LIKE '\\%%s\\%' OR ModelPy LIKE '\\%%s\\%' )", fields.c_str(), sMan.c_str(), fl.c_str(), fl.c_str());
     }
     SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
-    auto a = db.bindnquery<int, string, string, string, string
-        , double, double, double, double
-        , double, double, double
-        , double, double, double
-        , double, double, double
-        , double, double, double
-        , double, double, double
-        , double, double, double
-        , double, double, double>(sql);
+    auto a = db.bindnquery<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(sql);
     f_vehicles.clear();
     ui->dcLw2->clear();
     for (auto x:a)
     {
-        int VehID = std::get<0>(x);
-        string ModelName = std::get<1>(x);
-        string ModelPy = std::get<2>(x);
-        string BeginDT = std::get<3>(x);
-        string EndDT = std::get<4>(x);
-
-        double Wheelbase = std::get<5>(x); double TrackDia = std::get<6>(x);
-        double FTreadWidth = std::get<7>(x); double RTreadWidth = std::get<8>(x);
-
-        double FToeMin = std::get<9>(x); double FToe = std::get<10>(x); double FToeMax = std::get<11>(x);
-        double FCamberMin = std::get<12>(x); double FCamber = std::get<13>(x); double FCamberMax = std::get<14>(x);
-        double KpiCasterMin = std::get<15>(x); double  KpiCaster = std::get<16>(x); double KpiCasterMax = std::get<17>(x);
-        double KpiCamberMin = std::get<18>(x); double KpiCamber = std::get<19>(x); double KpiCamberMax = std::get<20>(x);
-
-        double RToeMin = std::get<21>(x); double RToe = std::get<22>(x); double RToeMax = std::get<23>(x);
-        double RCamberMin = std::get<24>(x); double RCamber = std::get<25>(x); double RCamberMax = std::get<26>(x);
-        double RThrustMin = std::get<27>(x); double  RThrust = std::get<28>(x); double RThrustMax = std::get<29>(x);
+        int ManID = std::get<0>(x);
+        string ManName = std::get<1>(x);
+        string ManPy = std::get<2>(x);
+        int VehID = std::get<3>(x);
+        string ModelName = std::get<4>(x);
+        string ModelPy = std::get<5>(x);
+        string BeginDT = std::get<6>(x);
+        string EndDT = std::get<7>(x);
+        double Wheelbase = std::get<8>(x);
+        double TrackDia = std::get<9>(x);
+        double FTreadWidth = std::get<10>(x);
+        double RTreadWidth = std::get<11>(x);
+        double FToeMin = std::get<12>(x);
+        double FToe = std::get<13>(x);
+        double FToeMax = std::get<14>(x);
+        double FCamberMin = std::get<15>(x);
+        double FCamber = std::get<16>(x);
+        double FCamberMax = std::get<17>(x);
+        double KpiCasterMin = std::get<18>(x);
+        double KpiCaster = std::get<19>(x);
+        double KpiCasterMax = std::get<20>(x);
+        double KpiCamberMin = std::get<21>(x);
+        double KpiCamber = std::get<22>(x);
+        double KpiCamberMax = std::get<23>(x);
+        double RToeMin = std::get<24>(x);
+        double RToe = std::get<25>(x);
+        double RToeMax = std::get<26>(x);
+        double RCamberMin = std::get<27>(x);
+        double RCamber = std::get<28>(x);
+        double RCamberMax = std::get<29>(x);
+        double RThrustMin = std::get<30>(x);
+        double RThrust = std::get<31>(x);
+        double RThrustMax = std::get<32>(x);
 
         Vehicle vehicle{
-             VehID, ModelName, ModelPy,
-             BeginDT, EndDT,
-             Wheelbase, TrackDia,
-             FTreadWidth, RTreadWidth,
-             FToeMin, FToe, FToeMax,
-             FCamberMin, FCamber, FCamberMax,
-             KpiCasterMin, KpiCaster, KpiCasterMax,
-             KpiCamberMin, KpiCamber, KpiCamberMax,
-             RToeMin, RToe, RToeMax,
-             RCamberMin, RCamber, RCamberMax,
-             RThrustMin, RThrust, RThrustMax
+            ManID, ManName, ManPy,
+            VehID, ModelName, ModelPy,
+            BeginDT, EndDT,
+            Wheelbase, TrackDia,
+            FTreadWidth, RTreadWidth,
+            FToeMin, FToe, FToeMax,
+            FCamberMin, FCamber, FCamberMax,
+            KpiCasterMin, KpiCaster, KpiCasterMax,
+            KpiCamberMin, KpiCamber, KpiCamberMax,
+            RToeMin, RToe, RToeMax,
+            RCamberMin, RCamber, RCamberMax,
+            RThrustMin, RThrust, RThrustMax
         };
         f_vehicles.push_back(vehicle);
-        QListWidgetItem * oItem = new QListWidgetItem();
+        QListWidgetItem *oItem = new QListWidgetItem();
         oItem->setData(Qt::UserRole, int(f_vehicles.size()));
         oItem->setText(CxQString::gbkToQString(ModelName));
         ui->dcLw2->addItem(oItem);
@@ -519,27 +531,125 @@ void MainWindow::refreshDcVeh(const std::string& sMan, const std::string &sFilte
 //    }
 }
 
-void MainWindow::viewDcVeh(int index)
+/**
+  INSERT INTO Vehicle(
+        ManID, ManName, ManPy,
+        VehID, ModelName, ModelPy,
+        BeginDT, EndDT,
+        Wheelbase, TrackDia,
+        FTreadWidth, RTreadWidth,
+        FToeMin, FToe, FToeMax,
+        FCamberMin, FCamber, FCamberMax,
+        KpiCasterMin, KpiCaster, KpiCasterMax,
+        KpiCamberMin, KpiCamber, KpiCamberMax,
+        RToeMin, RToe, RToeMax,
+        RCamberMin, RCamber, RCamberMax,
+        RThrustMin, RThrust, RThrustMax
+        ) VALUES (
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?,
+        ?, ?,
+        ?, ?,
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?
+            );
+ * @param veh
+ * @return
+ */
+int MainWindow::insertVeh(const Vehicle &veh)
+{
+    string sSql = "INSERT INTO Vehicle(\n"
+                  "        ManID, ManName, ManPy,\n"
+                  "        VehID, ModelName, ModelPy,\n"
+                  "        BeginDT, EndDT,\n"
+                  "        Wheelbase, TrackDia,\n"
+                  "        FTreadWidth, RTreadWidth,\n"
+                  "        FToeMin, FToe, FToeMax,\n"
+                  "        FCamberMin, FCamber, FCamberMax,\n"
+                  "        KpiCasterMin, KpiCaster, KpiCasterMax,\n"
+                  "        KpiCamberMin, KpiCamber, KpiCamberMax,\n"
+                  "        RToeMin, RToe, RToeMax,\n"
+                  "        RCamberMin, RCamber, RCamberMax,\n"
+                  "        RThrustMin, RThrust, RThrustMax\n"
+                  "        ) VALUES (\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?,\n"
+                  "        ?, ?,\n"
+                  "        ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?,\n"
+                  "        ?, ?, ?\n"
+                  "            );";
+    vector<tuple<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>> rows;
+    rows.push_back(tuple<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>
+        (
+            veh.ManID, veh.ManName, veh.ManPy,
+            veh.VehID, veh.ModelName, veh.ModelPy,
+            veh.BeginDT, veh.EndDT,
+            veh.Wheelbase, veh.TrackDia,
+            veh.FTreadWidth, veh.RTreadWidth,
+            veh.FToeMin, veh.FToe, veh.FToeMax,
+            veh.FCamberMin, veh.FCamber, veh.FCamberMax,
+            veh.KpiCasterMin, veh.KpiCaster, veh.KpiCasterMax,
+            veh.KpiCamberMin, veh.KpiCamber, veh.KpiCamberMax,
+            veh.RToeMin, veh.RToe, veh.RToeMax,
+            veh.RCamberMin, veh.RCamber, veh.RCamberMax,
+            veh.RThrustMin, veh.RThrust, veh.RThrustMax
+        ));
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+    int r = db.bindnexec<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(sSql, rows);
+    return r;
+}
+
+void MainWindow::viewOutDcVeh(int index)
 {
     if (index < 0 || index > f_vehicles.size())
     {
         return;
     }
-    Vehicle &veh = f_vehicles[index];
-    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
-    auto a = db.bindnquery<string, string, string>(CxString::format("SELECT f, s, b FROM Vehimage WHERE vid=%d", veh.VehID));
-    if (a.size()>0)
+
+}
+
+void MainWindow::viewOutDcVeh(const Vehicle &veh)
+{
+    if (veh.VehID >= 0)
     {
-        auto &x = a[0];
-        loadImage(1, std::get<0>(x));
-        loadImage(2, std::get<0>(x));
-        loadImage(3, std::get<0>(x));
+        SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+        auto a = db.bindnquery<string, string, string>(CxString::format("SELECT f, s, b FROM Vehimage WHERE vid=%d", veh.VehID));
+        if (a.size() > 0)
+        {
+            auto &x = a[0];
+            loadImage(1, std::get<0>(x));
+            loadImage(2, std::get<0>(x));
+            loadImage(3, std::get<0>(x));
+        }
+    }
+    else
+    {
+        ui->dcImage1->clear();
+        ui->dcImageEd1->clear();
+        ui->dcImage2->clear();
+        ui->dcImageEd2->clear();
+        ui->dcImage2->clear();
+        ui->dcImageEd2->clear();
     }
     //    int VehID; std::string ModelName, ModelPy;
     //    std::string BeginDT, EndDT;
     //    double Wheelbase, TrackDia;
     //    double FTreadWidth, RTreadWidth;
     ui->dcEd31->setText(CxQString::gbkToQString(veh.ModelName));
+    ui->dcEd31_2->setText(CxQString::gbkToQString(veh.ModelPy));
 
     ui->dcEd32->setText(CxQString::gbkToQString(veh.BeginDT));
     ui->dcEd33->setText(CxQString::gbkToQString(veh.EndDT));
@@ -573,17 +683,78 @@ void MainWindow::viewDcVeh(int index)
     //    double RToeMin, RToe, RToeMax;
     //    double RCamberMin, RCamber, RCamberMax;
     //    double RThrustMin, RThrust, RThrustMax;
-    ui->dcEd51->setText(QString::number(veh.KpiCamberMax, 'g', 3));
-    ui->dcEd52->setText(QString::number(veh.KpiCamberMax, 'g', 3));
-    ui->dcEd53->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd51->setText(QString::number(veh.RToeMin, 'g', 3));
+    ui->dcEd52->setText(QString::number(veh.RToe, 'g', 3));
+    ui->dcEd53->setText(QString::number(veh.RToeMax, 'g', 3));
 
-    ui->dcEd54->setText(QString::number(veh.KpiCamberMax, 'g', 3));
-    ui->dcEd55->setText(QString::number(veh.KpiCamberMax, 'g', 3));
-    ui->dcEd56->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd54->setText(QString::number(veh.RCamberMin, 'g', 3));
+    ui->dcEd55->setText(QString::number(veh.RCamber, 'g', 3));
+    ui->dcEd56->setText(QString::number(veh.RCamberMax, 'g', 3));
 
-    ui->dcEd57->setText(QString::number(veh.KpiCamberMax, 'g', 3));
-    ui->dcEd58->setText(QString::number(veh.KpiCamberMax, 'g', 3));
-    ui->dcEd59->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd57->setText(QString::number(veh.RThrustMin, 'g', 3));
+    ui->dcEd58->setText(QString::number(veh.RThrust, 'g', 3));
+    ui->dcEd59->setText(QString::number(veh.RThrustMax, 'g', 3));
+}
+
+Vehicle MainWindow::viewInDcVeh()
+{
+    if (f_vehicles.size() <= 0 || !ui->dcLw2->currentRow() < 0 || ui->dcLw2->currentRow() >= f_vehicles.size())
+    {
+        return Vehicle().init();
+    }
+
+//    Vehicle veh = f_vehicles[ui->dcLw2->currentRow()];
+    Vehicle veh;
+    veh.ModelName = CxQString::gbkToStdString(ui->dcEd31->text());
+    veh.ModelPy = CxQString::gbkToStdString(ui->dcEd31_2->text());
+
+    veh.BeginDT = ui->dcEd32->text().toDouble();
+    veh.EndDT = ui->dcEd33->text().toDouble();
+
+    veh.Wheelbase = ui->dcEd34->text().toDouble();
+    veh.TrackDia = ui->dcEd35->text().toDouble();
+
+    veh.FTreadWidth = ui->dcEd36->text().toDouble();
+    veh.RTreadWidth = ui->dcEd37->text().toDouble();
+
+    //
+    //    double FToeMin, FToe, FToeMax;
+    //    double FCamberMin, FCamber, FCamberMax;
+    //    double KpiCasterMin, KpiCaster, KpiCasterMax;
+    //    double KpiCamberMin, KpiCamber, KpiCamberMax;
+    veh.FToeMin = ui->dcEd41->text().toDouble();
+    veh.FToe = ui->dcEd42->text().toDouble();
+    veh.FToeMax = ui->dcEd43->text().toDouble();
+
+    veh.FCamberMin = ui->dcEd44->text().toDouble();
+    veh.FCamber = ui->dcEd45->text().toDouble();
+    veh.FCamberMax = ui->dcEd46->text().toDouble();
+
+    veh.KpiCasterMin = ui->dcEd47->text().toDouble();
+    veh.KpiCaster = ui->dcEd48->text().toDouble();
+    veh.KpiCasterMax = ui->dcEd49->text().toDouble();
+
+    veh.KpiCamberMin = ui->dcEd4a->text().toDouble();
+    veh.KpiCamber = ui->dcEd4b->text().toDouble();
+    veh.KpiCamberMax = ui->dcEd4c->text().toDouble();
+
+    //
+    //    double RToeMin, RToe, RToeMax;
+    //    double RCamberMin, RCamber, RCamberMax;
+    //    double RThrustMin, RThrust, RThrustMax;
+    veh.RToeMin = ui->dcEd51->text().toDouble();
+    veh.RToe = ui->dcEd52->text().toDouble();
+    veh.RToeMax = ui->dcEd53->text().toDouble();
+
+    veh.RCamberMin = ui->dcEd54->text().toDouble();
+    veh.RCamber = ui->dcEd55->text().toDouble();
+    veh.RCamberMax = ui->dcEd56->text().toDouble();
+
+    veh.RThrustMin = ui->dcEd57->text().toDouble();
+    veh.RThrust = ui->dcEd58->text().toDouble();
+    veh.RThrustMax = ui->dcEd59->text().toDouble();
+
+    return veh;
 }
 
 void MainWindow::loadImage(int i, std::string &fn)
@@ -619,22 +790,23 @@ void MainWindow::selectImage(int i)
             ed = ui->dcImageEd2;
             break;
         case 3:
-            lb = ui->dcImage2;
-            ed = ui->dcImageEd2;
+            lb = ui->dcImage3;
+            ed = ui->dcImageEd3;
             break;
         default:;
     }
     QString selfilter = tr("JPEG (*.jpg *.jpeg)");
     QString fp = QFileDialog::getOpenFileName(this, tr("选择的图像文件"),
                                               "",
-                                              tr("JPEG (*.jpg *.jpeg);;TIFF (*.tif)" )
+                                              tr("JPEG (*.jpg *.jpeg);;PNG (*.png);;TIFF (*.tif)")
 //                                              CxQString::gbkToQString(Config::imagePath()),
 //                                              tr("All files (*.*);;JPEG (*.jpg *.jpeg);;TIFF (*.tif)" )
-                                              );
+    );
     string fp2 = CxQString::gbkToStdString(fp);
     if (CxFileSystem::isExist(fp2))
     {
-        string dst = CxFileSystem::mergeFilePath(Config::imagePath(), CxTime::currentSystemTimeString('-', 't')) + CxFileSystem::extractFileSuffixName(fp2);
+        string dst = CxFileSystem::mergeFilePath(Config::imagePath(), CxTime::currentSystemTimeString('-', 't'))
+                     + CxFileSystem::extractFileSuffixName(fp2);
         string src = fp2;
         if (CxFileSystem::copyFile(src, dst) <= 0)
         {
@@ -654,13 +826,12 @@ void MainWindow::selectImage(int i)
 
 void MainWindow::on_dcEd11_textChanged(const QString &arg1)
 {
-    string sFilter = CxQString::gbkToStdString(ui->dcEd11->text());
-    refreshDcMan(sFilter);
+    refreshDcMan(CxQString::gbkToStdString(arg1));
 }
 
 void MainWindow::on_dcEd21_textChanged(const QString &arg1)
 {
-    if (! ui->dcLw1->currentItem())
+    if (!ui->dcLw1->currentItem())
     {
         return;
     }
@@ -672,30 +843,8 @@ void MainWindow::on_dcEd21_textChanged(const QString &arg1)
 // add Man
 void MainWindow::on_dcBn1_clicked()
 {
-    string sSql = "INSERT INTO \"Man\"(\"ManID\", \"ManName\", \"ManPy\", \"LanID\", \"IsNative\", \"ManLogo\", \"Mem\", \"VIN\", \"recversion\") VALUES (10, 'BMW', 'BMW', 1033, 0, X'', NULL, '', NULL);";
-}
-
-// add Veh
-void MainWindow::on_dcBn61_clicked()
-{
-
-}
-
-// del Veh
-void MainWindow::on_dcBn62_clicked()
-{
-
-}
-
-// save Veh
-void MainWindow::on_dcBn63_clicked()
-{
-
-}
-
-void MainWindow::on_muDbExport_clicked()
-{
-    DbExportWindow dialog;
+    ManWindow dialog;
+    CxQWidget::setQSS(&dialog, _qssFilePath);
 
 //    dialog.setWindowTitle( sTitle );
 //    dialog.resize( 380, 220 );
@@ -707,17 +856,108 @@ void MainWindow::on_muDbExport_clicked()
             qApp->desktop()->availableGeometry()
         )
     );
-    if ( dialog.exec() == QDialog::Accepted )
+    if (dialog.exec() == QDialog::Accepted)
     {
-
+        Man man{
+            dialog.ManID,
+            dialog.ManName,
+            dialog.ManPy,
+            dialog.LanID,
+            dialog.IsNative,
+            dialog.ManLogo
+        };
+        f_mans.push_back(Man{});
     }
     else
     {
+    }
+}
 
+// add Veh
+void MainWindow::on_dcBn61_clicked()
+{
+    string sManName = ui->dcLw1->currentItem() ? CxQString::gbkToStdString(ui->dcLw1->currentItem()->text()) : string();
+    if (sManName.empty())
+    {
+        return;
+    }
+    Vehicle veh;
+    veh.init();
+    viewOutDcVeh(veh);
+    ui->dcBn61->setEnabled(false);
+}
+
+// del Veh
+void MainWindow::on_dcBn62_clicked()
+{
+
+    ui->dcBn61->setEnabled(true);
+}
+
+// save Veh
+void MainWindow::on_dcBn63_clicked()
+{
+    string sManName = ui->dcLw1->currentItem() ? CxQString::gbkToStdString(ui->dcLw1->currentItem()->text()) : string();
+    if (sManName.empty())
+    {
+        CxQDialog::ShowPrompt("品牌不能为空，请选择品牌，再保存！");
+        return;
+    }
+    Vehicle veh = viewInDcVeh();
+    if (veh.isValid())
+    {
+        int iMaxId = Config::maxVehId()+1;
+        veh.VehID = iMaxId;
+        veh.ManID =
+        int r = insertVeh(veh);
+        ui->dcBn61->setEnabled(true);
+    }
+    else
+    {
+        CxQDialog::ShowPrompt("车型与车型拼音不能为空，请检查！");
+    }
+}
+
+void MainWindow::on_muDbExport_clicked()
+{
+    DbExportWindow dialog;
+    CxQWidget::setQSS(&dialog, _qssFilePath);
+
+    dialog.setGeometry(
+        QStyle::alignedRect(
+            Qt::LeftToRight,
+            Qt::AlignCenter,
+            dialog.size(),
+            qApp->desktop()->availableGeometry()
+        )
+    );
+    if (dialog.exec() == QDialog::Accepted)
+    {
+    }
+    else
+    {
     }
 }
 
 void MainWindow::on_muDbBackup_clicked()
 {
+    DbBackupWindow dialog;
+    CxQWidget::setQSS(&dialog, _qssFilePath);
 
+//    dialog.setWindowTitle( sTitle );
+//    dialog.resize( 380, 220 );
+    dialog.setGeometry(
+        QStyle::alignedRect(
+            Qt::LeftToRight,
+            Qt::AlignCenter,
+            dialog.size(),
+            qApp->desktop()->availableGeometry()
+        )
+    );
+    if (dialog.exec() == QDialog::Accepted)
+    {
+    }
+    else
+    {
+    }
 }

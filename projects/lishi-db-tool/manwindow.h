@@ -17,6 +17,14 @@ public:
 
     bool eventFilter(QObject *watched, QEvent *event);
 
+    int ManID;
+    std::string ManName;
+    std::string ManPy;
+    int LanID;
+    int IsNative;
+    std::vector<char> ManLogo;
+
+    QImage ManLogoImage;
     int sqlResult;
 
 private slots:
@@ -26,7 +34,7 @@ private slots:
 
 private:
     Ui::ManWindow *ui;
-    QImage _image;
+
 };
 
 #endif // MANWINDOW_H

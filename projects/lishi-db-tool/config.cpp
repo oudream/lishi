@@ -88,7 +88,7 @@ std::map<int, std::string> Config::langInfos()
 {
     if (_langInfos.size()==0)
     {
-        string fp = CxFileSystem::normalize(CxFileSystem::mergeFilePath(CxAppEnv::resPath(), "lang/langs.csv"));
+        string fp = CxFileSystem::normalize(CxFileSystem::mergeFilePath(CxAppEnv::resPath(), "langs.csv"));
         string ls = CxFile::getLineString(fp);
         vector<string> ss;
         CxFile::load(fp, ss, ls);
@@ -103,4 +103,10 @@ std::map<int, std::string> Config::langInfos()
         }
     }
     return _langInfos;
+}
+
+int Config::currentLanID()
+{
+    int LanID = CxAppEnv::findConfig(string("system"), string("LanID"), int(1033));
+    return LanID;
 }

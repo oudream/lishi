@@ -35,7 +35,10 @@ void DbExportWindow::on_epBn1_clicked()
     QString fp = QFileDialog::getOpenFileName(this, tr("选择的数据库文件"),
                                                     CxQString::gbkToQString(CxAppEnv::dataPath()),
                                                     ".db");
-    ui->epEd1->setText(fp);
+    if (!fp.isEmpty())
+    {
+        ui->epEd1->setText(fp);
+    }
 }
 
 void DbExportWindow::on_epBn2_clicked()
@@ -54,7 +57,7 @@ void DbExportWindow::on_epBn2_clicked()
     string src = CxQString::gbkToStdString(ui->epEd1->text());
     string st = "失败";
     string msg = "导出文件到：" + dst;
-    if (CxFileSystem::isExist(src))
+    if (! CxFileSystem::isExist(src))
     {
         CxQDialog::ShowPrompt("源数据库不存在，导出停止！");
         return;
@@ -88,6 +91,6 @@ void DbExportWindow::on_epBn2_clicked()
         st = "完成";
     }
 
-    CxQDialog::ShowPrompt(CxQString::gbkToQString(msg + ". " + st + ". " + CxTime::currentSystemTimeString()));
+    ui->epPte3->appendPlainText(CxQString::gbkToQString(msg + ". " + st + ". " + CxTime::currentSystemTimeString()));
 }
 

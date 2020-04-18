@@ -40,16 +40,16 @@ void ManWindow::on_maBn1_clicked()
 //    [LanID] integer  NULL,
 //    [IsNative] bit  NULL,
 //    [ManLogo] blob(2147483647)  NULL,
-    int ManID = Config::maxManId()+1;
-    string ManName = CxQString::gbkToStdString(ui->maEd1->text());
-    string ManPy = CxQString::gbkToStdString(ui->maEd2->text());
-    int LanID = ui->maEd3->currentData().toInt();
-    int IsNative = ui->maEd4->isChecked() ? 1 : 0;
+    ManID = Config::maxManId() + 1;
+    ManName = CxQString::gbkToStdString(ui->maEd1->text());
+    ManPy = CxQString::gbkToStdString(ui->maEd2->text());
+    LanID = ui->maEd3->currentData().toInt();
+    IsNative = ui->maEd4->isChecked() ? 1 : 0;
     QByteArray arr;
     QBuffer buffer(&arr);
     buffer.open(QIODevice::WriteOnly);
-    _image.save(&buffer, "JPEG");
-    vector<char> ManLogo(arr.size());
+    ManLogoImage.save(&buffer, "JPEG");
+    ManLogo.resize(arr.size());
     memcpy(ManLogo.data(), arr.data(), arr.size());
 
     SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
@@ -60,6 +60,11 @@ void ManWindow::on_maBn1_clicked()
     int r = db.bindnexec<int, string, string, int, int, vector<char>>(sSql, rows);
 
     sqlResult = r;
+
+    if (r > 0)
+    {
+        Config::setMaxManId(ManID);
+    }
 
     accept();
 }
@@ -78,11 +83,11 @@ bool ManWindow::eventFilter(QObject *watched, QEvent *event)
             QString selfilter = tr("JPEG (*.jpg *.jpeg)");
             QString fp = QFileDialog::getOpenFileName(this, tr("选择的图像文件"),
                                                       CxQString::gbkToQString(Config::imagePath()),
-                                                      tr("All files (*.*);;JPEG (*.jpg *.jpeg);;TIFF (*.tif)" ));
+                                                      tr("All files (*.*);;JPEG (*.jpg *.jpeg);;TIFF (*.tif)"));
 
-            _image = QImage(fp);
+            ManLogoImage = QImage(fp);
             ui->maEd6_2->setText(fp);
-            ui->maEd6->setPixmap(QPixmap::fromImage(_image));
+            ui->maEd6->setPixmap(QPixmap::fromImage(ManLogoImage));
         }
     }
     return QDialog::eventFilter(watched, event);

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>839</width>
-    <height>638</height>
+    <width>1003</width>
+    <height>675</height>
    </rect>
   </property>
   <property name="font">
@@ -360,6 +360,19 @@
                    </item>
                    <item>
                     <widget class="QLineEdit" name="dcEd31"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_22">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>　车型拼音  </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd31_2"/>
                    </item>
                   </layout>
                  </item>

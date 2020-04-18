@@ -102,4 +102,3 @@ void DbBackupWindow::on_buRestoreBn_clicked()
 
     CxQDialog::ShowPrompt(CxQString::gbkToQString(msg + ". " + st + ". " + CxTime::currentSystemTimeString()));
 }
-
