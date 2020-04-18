@@ -1,6 +1,6 @@
 
 #include <ccxx/ccxx.h>
-#include <ccxx/sqlite3.h>
+#include <ccxx/sqlite3/sqlite3.h>
 
 using namespace std;
 

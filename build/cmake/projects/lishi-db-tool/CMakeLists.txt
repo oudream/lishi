@@ -34,11 +34,23 @@ set(QRC_FILES data/simplebrowser.qrc)
 set(SOURCE_FILES
         # h
         mainwindow.h
+        sqlite3template.hpp
+        manwindow.h
+        dbbackupwindow.h
+        dbexportwindow.h
+        config.h
         # cpp
         main.cpp
         mainwindow.cpp
+        manwindow.cpp
+        dbbackupwindow.cpp
+        dbexportwindow.cpp
+        config.cpp
         # ui
         mainwindow.ui
+        manwindow.ui
+        dbbackupwindow.ui
+        dbexportwindow.ui
         #
         ${TS_FILES}
         #

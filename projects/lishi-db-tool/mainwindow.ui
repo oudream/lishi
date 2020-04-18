@@ -6,274 +6,831 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>839</width>
+    <height>638</height>
    </rect>
   </property>
   <property name="font">
    <font>
-    <pointsize>15</pointsize>
+    <pointsize>13</pointsize>
    </font>
   </property>
   <property name="windowTitle">
    <string>力狮 - 数据库工具</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
+   <layout class="QVBoxLayout" name="verticalLayout_9">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
-     <widget class="QWidget" name="pnLeft" native="true">
-      <layout class="QGridLayout" name="gridLayout_2"/>
-     </widget>
-    </item>
-    <item>
-     <widget class="QWidget" name="pnRight" native="true">
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QTabWidget" name="tabWidget">
-         <property name="font">
-          <font>
-           <pointsize>15</pointsize>
-          </font>
+     <widget class="QWidget" name="menuBarTop" native="true">
+      <layout class="QHBoxLayout" name="horizontalLayout_13">
+       <item>
+        <widget class="QPushButton" name="muDbExport">
+         <property name="text">
+          <string>数据库导出</string>
          </property>
-         <property name="tabPosition">
-          <enum>QTabWidget::North</enum>
-         </property>
-         <property name="tabShape">
-          <enum>QTabWidget::Rounded</enum>
-         </property>
-         <property name="currentIndex">
-          <number>2</number>
-         </property>
-         <widget class="QWidget" name="dcTab">
-          <attribute name="title">
-           <string>[ 删除数据 - VEH ]</string>
-          </attribute>
-          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_2">
-               <item>
-                <widget class="QLineEdit" name="dcEd1">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="dcBn1">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="baseSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <pointsize>16</pointsize>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>查询</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="QListWidget" name="dcLw1"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,1">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_3">
-               <item>
-                <widget class="QLabel" name="label">
-                 <property name="text">
-                  <string>选择以下数据，点击删除-&gt;</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="dcBn2">
-                 <property name="text">
-                  <string>删除</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="QListWidget" name="dcLw2"/>
-             </item>
-             <item>
-              <widget class="QWidget" name="widget" native="true"/>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="dlTab">
-          <attribute name="title">
-           <string>[ 删除数据 - 语言 ]</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <item>
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>选择以下数据，点击删除-&gt;</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="dlBn1">
-               <property name="text">
-                <string>删除</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QListWidget" name="dlLw1"/>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="buTab">
-          <attribute name="title">
-           <string>[ 备份数据 - DB ]</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="3,1">
-             <item>
-              <widget class="QLineEdit" name="buPathEd"/>
-             </item>
-             <item>
-              <widget class="QPushButton" name="buPathBn">
-               <property name="text">
-                <string>备份目录</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="3,1">
-             <item>
-              <widget class="QLineEdit" name="buFileNameEd"/>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButton_2">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>文件名</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="2,1,2">
-             <item>
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QPushButton" name="buRunBn">
-               <property name="text">
-                <string>执行备份</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <spacer name="verticalSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
         </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="muDbBackup">
+         <property name="text">
+          <string>数据库备份</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_6">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>1058</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
     </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
+      <item>
+       <widget class="QWidget" name="pnLeft" native="true">
+        <layout class="QGridLayout" name="gridLayout_2"/>
+       </widget>
+      </item>
+      <item>
+       <widget class="QWidget" name="pnRight" native="true">
+        <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,4">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
+           <property name="spacing">
+            <number>0</number>
+           </property>
+           <property name="rightMargin">
+            <number>10</number>
+           </property>
+           <property name="bottomMargin">
+            <number>10</number>
+           </property>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,0">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>5</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="dcEd11">
+               <property name="placeholderText">
+                <string>品牌</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QListWidget" name="dcLw1"/>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLineEdit" name="dcEd12"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="dcBn1">
+                 <property name="text">
+                  <string>添加</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="dcEd21">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="baseSize">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="placeholderText">
+                <string>车型</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QListWidget" name="dcLw2"/>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_3" native="true">
+           <layout class="QVBoxLayout" name="verticalLayout_3" stretch="12,19,2">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>10</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QTabWidget" name="tabWidget">
+              <property name="tabPosition">
+               <enum>QTabWidget::North</enum>
+              </property>
+              <property name="tabShape">
+               <enum>QTabWidget::Rounded</enum>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <property name="documentMode">
+               <bool>true</bool>
+              </property>
+              <property name="tabsClosable">
+               <bool>true</bool>
+              </property>
+              <property name="movable">
+               <bool>false</bool>
+              </property>
+              <property name="tabBarAutoHide">
+               <bool>false</bool>
+              </property>
+              <widget class="QWidget" name="tab">
+               <attribute name="title">
+                <string>前</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="dcImage1">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLineEdit" name="dcImageEd1"/>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="tab_2">
+               <attribute name="title">
+                <string>侧</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_3">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="dcImage2">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLineEdit" name="dcImageEd2"/>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="tab_3">
+               <attribute name="title">
+                <string>后</string>
+               </attribute>
+               <layout class="QGridLayout" name="gridLayout_4">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="dcImage3">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLineEdit" name="dcImageEd3"/>
+                </item>
+               </layout>
+              </widget>
+             </widget>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_7">
+                 <property name="spacing">
+                  <number>5</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>10</number>
+                 </property>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_14">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_14">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>　　车型   </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd31"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_15">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_15">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>生产日期   </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd32"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_20">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>　　　　　至  </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd33"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_21">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>时</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_16">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_16">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>　　轴距   </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd34"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_18">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>mm　轮軗直径  </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd35"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_19">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>mm</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_17">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_17">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>　前轮距   </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd36"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_12">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>mm　　后轮距  </string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd37"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_13">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>mm</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_5">
+                 <property name="spacing">
+                  <number>5</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>10</number>
+                 </property>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,1,1,1,1,1,1,1">
+                   <item>
+                    <spacer name="horizontalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_5">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_8">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>最小值</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_2">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_9">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>典型值</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_10">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>最大值</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_4">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_5">
+                   <item>
+                    <widget class="QLabel" name="label">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd41"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd42"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd43"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_6">
+                   <item>
+                    <widget class="QLabel" name="label_2">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd44"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd45"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd46"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <item>
+                    <widget class="QLabel" name="label_3">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd47"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd48"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd49"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_8">
+                   <item>
+                    <widget class="QLabel" name="label_4">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd4a"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd4b"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd4c"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </item>
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_6">
+                 <property name="spacing">
+                  <number>5</number>
+                 </property>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_9">
+                   <item>
+                    <widget class="QLabel" name="label_5">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd51"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd52"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd53"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_10">
+                   <item>
+                    <widget class="QLabel" name="label_6">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd54"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd55"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd56"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_11">
+                   <item>
+                    <widget class="QLabel" name="label_7">
+                     <property name="styleSheet">
+                      <string notr="true">color : red;</string>
+                     </property>
+                     <property name="text">
+                      <string>前轮前束</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd57"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd58"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="dcEd59"/>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer">
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>40</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="dcBn61">
+                <property name="text">
+                 <string>添加</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="dcBn62">
+                <property name="text">
+                 <string>删除</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="dcBn63">
+                <property name="text">
+                 <string>保存</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>22</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
-  <tabstop>dcEd1</tabstop>
-  <tabstop>dcBn1</tabstop>
-  <tabstop>dcLw1</tabstop>
+  <tabstop>dcEd21</tabstop>
   <tabstop>dcLw2</tabstop>
-  <tabstop>dcBn2</tabstop>
-  <tabstop>dlBn1</tabstop>
-  <tabstop>dlLw1</tabstop>
-  <tabstop>tabWidget</tabstop>
+  <tabstop>dcLw1</tabstop>
  </tabstops>
  <resources/>
  <connections/>

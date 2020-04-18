@@ -1,217 +1,71 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+#include "dbbackupwindow.h"
+#include "dbexportwindow.h"
+#include "manwindow.h"
+
 #include <QFileDialog>
 #include <QListView>
 #include <QListWidgetItem>
+#include <QScreen>
 
 #include <QWebEngineView>
 #include <QWebEnginePage>
 #include <QWebEngineProfile>
 #include <QStringList>
 #include <QUrl>
+#include <QDesktopWidget>
 
 #include <tuple>
 #include <exception>
 #include <cstdint>
 
-#include <ccxx/sqlite3/sqlite3.h>
 #include <ccxx/cxapplication.h>
 #include <ccxx/cxdatabase.h>
 #include <ccxx/cxinterinfo.h>
 #include <ccxx/cxqtutil.h>
 
-namespace SQL
-{
-    using std::string;
-    using std::vector;
-    using std::tuple;
+#include "sqlite3template.hpp"
+#include "config.h"
 
-    typedef std::runtime_error SQLRTerror;
+class Vehicle {
+public:
+    int VehID; std::string ModelName, ModelPy;
+    std::string BeginDT, EndDT;
+    double Wheelbase, TrackDia;
+    double FTreadWidth, RTreadWidth;
 
-    template<typename T>
-    static T get_single(sqlite3_stmt *ppsm, int iCol);
+    double FToeMin, FToe, FToeMax;
+    double FCamberMin, FCamber, FCamberMax;
+    double KpiCasterMin, KpiCaster, KpiCasterMax;
+    double KpiCamberMin, KpiCamber, KpiCamberMax;
 
-    template<>
-    inline int get_single(sqlite3_stmt *ppsm, int iCol)
-    {
-        return sqlite3_column_int(ppsm, iCol);
-    }
+    double RToeMin, RToe, RToeMax;
+    double RCamberMin, RCamber, RCamberMax;
+    double RThrustMin, RThrust, RThrustMax;
 
-    template<>
-    inline std::int64_t get_single(sqlite3_stmt *ppsm, int iCol)
-    {
-        return sqlite3_column_int64(ppsm, iCol);
-    }
 
-    template<>
-    inline double get_single(sqlite3_stmt *ppsm, int iCol)
-    {
-        return sqlite3_column_double(ppsm, iCol);
-    }
+//    Vehicle(int aVehID, string aModelName, string aModelPy,
+//            string aBeginDT, string aEndDT,
+//            double aWheelbase, double aTrackDia,
+//            double aFTreadWidth, double aRTreadWidth,
+//            double aFToeMin, double aFToe, double aFToeMax,
+//            double aFCamberMin, double aFCamber, double aFCamberMax,
+//            double aKpiCasterMin, double aKpiCaster, double aKpiCasterMax,
+//            double aKpiCamberMin, double aKpiCamber, double aKpiCamberMax,
+//            double aRToeMin, double aRToe, double aRToeMax,
+//            double aRCamberMin, double aRCamber, double aRCamberMax,
+//            double aRThrustMin, double aRThrust, double aRThrustMax)
+//    {
+//
+//    }
 
-    template<>
-    inline std::string get_single(sqlite3_stmt *ppsm, int iCol)
-    {
-        const char *foo = reinterpret_cast<const char *>(sqlite3_column_text(ppsm, iCol));
-        return (foo ? string(foo) : "");
-    }
-
-    template<>
-    inline std::vector<char> get_single(sqlite3_stmt *ppsm, int iCol)
-    {
-        size_t len = sqlite3_column_bytes(ppsm, iCol);
-        const char *foo = reinterpret_cast<const char *>(sqlite3_column_blob(ppsm, iCol));
-        if (foo)
-        {
-            std::vector<char> r(len);
-            memcpy(r.data(), foo, len);
-            return r;
-        }
-        return std::vector<char>();
-    }
-
-    class Con {
-    protected:
-        sqlite3 *_db;
-
-    private:
-        string _dbfilename;
-        bool _autoClose;
-
-    public:
-        Con(const string &dbfile) :
-            _dbfilename(dbfile),
-            _autoClose(false)
-        {
-            int erg;
-            erg = sqlite3_open(_dbfilename.c_str(), &_db);
-            if (erg != SQLITE_OK)
-            {
-                throw (SQLRTerror(sqlite3_errmsg(_db)));
-            }
-            _autoClose = true;
-        }
-
-        Con(sqlite3 *db1) :
-            _db(db1),
-            _autoClose(false)
-        {
-            _dbfilename = string(sqlite3_db_filename(db1, NULL));
-        }
-
-        ~Con()
-        {
-            if (_autoClose)
-            {
-                sqlite3_close(_db);
-            }
-        }
-
-    private:
-        struct PPSM {
-            sqlite3_stmt *me;
-
-            PPSM(sqlite3 *db, const string &query) :
-                me(nullptr)
-            {
-                if (sqlite3_prepare_v2(db, query.c_str(), query.size(),
-                                       &me, nullptr)
-                    != SQLITE_OK)
-                {
-                    throw (SQLRTerror(sqlite3_errmsg(db)));
-                }
-            }
-
-            void bindvals(vector<string> &&vals)
-            {
-                int pos = 0;
-                for (auto &v : vals)
-                {
-                    sqlite3_bind_text(me, ++pos, v.c_str(), v.size(), SQLITE_TRANSIENT);
-                }
-            }
-
-            ~PPSM()
-            {
-                sqlite3_finalize(me);
-            }
-
-        };
-
-    public:
-
-//> Within the initializer-list of a braced-init-list, the initializer-clauses, including
-// any that result from pack expansions, are evaluated in the order in which they appear.
-// That is, every value computation and side effect associated with a given initializer-clause
-// is sequenced before every value computation and side effect associated with any
-// initializer-clause that follows it in the comma-separated list of the initializer-list.
-
-        template<typename ...ARGS>
-        vector<tuple<ARGS...>> bindnquery(const string &query,
-                                          vector<string> &&bindvals = {})
-        {
-            PPSM ppsm(_db, query);
-            ppsm.bindvals(std::forward<decltype(bindvals)>(bindvals));
-            vector<tuple<ARGS...> > answer{};
-
-            while (sqlite3_step(ppsm.me) == SQLITE_ROW)
-            {
-                int col = 0;
-#pragma GCC diagnostic ignored "-Wsequence-point"
-                tuple<ARGS...> r{get_single<ARGS>(ppsm.me, (col++))...};
-                answer.push_back(r);
-            }
-            return answer;
-        }
-
-        //for  update and such....
-        void query_nothing(const string &query, vector<string> &&bindvals = {})
-        {
-            PPSM ppsm(_db, query);
-            ppsm.bindvals(std::forward<decltype(bindvals)>(bindvals));
-            auto result = sqlite3_step(ppsm.me);
-            if (result == SQLITE_BUSY)
-            {
-                do
-                {
-                    sched_yield();
-                    result = sqlite3_step(ppsm.me);;
-                }
-                while (result == SQLITE_BUSY);
-            }
-        }
-
-        template<typename QType>
-        QType query_one(const string &query, vector<string> &&bindvals = {})
-        {
-            PPSM ppsm(_db, query);
-            ppsm.bindvals(std::forward<decltype(bindvals)>(bindvals));
-            if (sqlite3_step(ppsm.me) != SQLITE_ROW)
-            {
-                throw (std::runtime_error("Query did not yield answer:" + query));
-            }
-            return get_single<QType>(ppsm.me, 0);
-        }
-    };
-
-}
+};
 
 using namespace std;
 
-QUrl f_url = QUrl(QStringLiteral("http://news.baidu.com/"));
-string f_fpDb = "";
-CxDatabase *f_db = NULL;
-
-int fn_init()
-{
-    f_fpDb = CxFileSystem::normalize(CxFileSystem::mergeFilePath(CxAppEnv::applicationDeployPath(), "../alignerchen/lsmasterlite.db"));
-    cxPrompt() << "sqlite db file path: " << f_fpDb;
-    f_db = CxDatabaseManager::createDatabase(f_fpDb);
-    f_db->openDatabase();
-
-    return 0;
-}
+vector<Vehicle> f_vehicles;
 
 int fn_helloDb1()
 {
@@ -224,13 +78,13 @@ int fn_helloDb1()
                              ");";
 
     string sCount;
-    sCount = f_db->queryValue("select count(*) from sqlite_master where type='table' and name='t1';");
+    sCount = Config::mainDb()->queryValue("select count(*) from sqlite_master where type='table' and name='t1';");
     if (CxString::toInt32(sCount) <= 0)
     {
-        cxPromptCheck(f_db->execSql(CREATE_T1), return false);
+        cxPromptCheck(Config::mainDb()->execSql(CREATE_T1), return false);
     }
 
-    SQL::Con db((sqlite3 *) f_db->getDb());
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
 
     auto a = db.bindnquery<int, double, string, string, int>("SELECT f1, f2, f3, f4, f4 from t1  ;");
 //    a.push_back(db.bindnquery<double, std::string>("Select 3.33333333, 3.3;")[0]);
@@ -242,6 +96,7 @@ int fn_helloDb1()
         string s = std::get<2>(x);
         std::cout << i << " " << d << " " << s << " " << std::get<4>(x) << " " << std::endl;
     }
+
 //    std::cout << std::endl <<  "query mit binds: " << std::endl;
 //    for (auto row: db.bindnquery<int, double>("SELECT a,c from a where b like ?1;", {"%fira"}))
 //    {
@@ -252,44 +107,100 @@ int fn_helloDb1()
 //
 //    db.query_nothing("UPDATE a set c ='0.6' where a like ?1;", {"6"});
 
+    {
+        string sSql = "INSERT INTO t1(f1, f2, f3, f4, f5) VALUES (?, ?, ?, ?, ?);";
+        sqlite3 *db = (sqlite3 *) Config::mainDb()->getDb();
+
+        int iTotalChange = sqlite3_total_changes(db);
+        int iChange = sqlite3_changes(db);
+        cout << iChange << endl;
+        cout << iTotalChange << endl;
+
+        sqlite3_stmt* stmt;
+        const char* tail;
+        int rc = sqlite3_prepare(db, sSql.c_str(), sSql.size(), &stmt, &tail);
+        if (rc != SQLITE_OK)
+        {
+            return -1;
+        }
+        for (int i = 0; i < 10; ++i)
+        {
+            rc = sqlite3_reset(stmt);
+            if (rc != SQLITE_OK)
+            {
+                continue;
+            }
+            sqlite3_bind_int(stmt, 1, i * i);
+            sqlite3_bind_double(stmt, 2, i * i * 123.456);
+            char buffer [50];
+            sprintf (buffer, "i = %d, i * i is %d", i, i * i);
+            sqlite3_bind_text(stmt, 3, buffer, strlen(buffer), 0);
+            sqlite3_bind_blob(stmt, 4, buffer, 50, 0);
+            sqlite3_bind_int64(stmt, 1, (sqlite3_int64)i * i + i);
+            rc = sqlite3_step(stmt);
+            if (rc != SQLITE_OK && rc != SQLITE_DONE)
+            {
+                return i;
+            }
+        }
+        sqlite3_finalize(stmt);
+
+        iChange = sqlite3_changes(db);
+        iTotalChange = sqlite3_total_changes(db);
+        cout << iChange << endl;
+        cout << iTotalChange << endl;
+    }
+
+    {
+        string sSql = "INSERT INTO t1(f1, f2, f3, f4, f5) VALUES (?, ?, ?, ?, ?);";
+        vector<tuple<int, double, string, vector<char>, int>> rows;
+        for (int i = 0; i < 10; ++i)
+        {
+            char buffer [50];
+            sprintf (buffer, "i = %d, i * i is %d", i, i * i);
+            vector<char> image{static_cast<char>(1*i), static_cast<char>(2*i), static_cast<char>(3*i), static_cast<char>(4*i), static_cast<char>(5*i)};
+            rows.push_back(std::tuple<int, double, string, vector<char>, int> (i, i * i * 123.456, string(buffer), image, i * i * i));
+        }
+        int r = db.bindnexec<int, double, string, vector<char>, int>(sSql, rows);
+        std::cout << "bindnexec :" << r << std::endl;
+    }
+
     return 0;
 }
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow)
+int fn_createVehimage()
 {
-    ui->setupUi(this);
+    const string CREATE_T1 = "CREATE TABLE \"Vehimage\" (\n"
+                             "  \"vid\" integer,\n"
+                             "  \"f\" text,\n"
+                             "  \"s\" text,\n"
+                             "  \"b\" text,\n"
+                             "  PRIMARY KEY (\"vid\")\n"
+                             ");";
 
-    QWebEngineView *webView = new QWebEngineView(ui->pnLeft);
-    QWebEnginePage *webPage = new QWebEnginePage(QWebEngineProfile::defaultProfile(), webView);
-    webView->setPage(webPage);
-    webView->setUrl(f_url);
-    ui->pnLeft->layout()->addWidget(webView);
+    string sCount;
+    sCount = Config::mainDb()->queryValue("select count(*) from sqlite_master where type='table' and name='Vehimage';");
+    if (CxString::toInt32(sCount) <= 0)
+    {
+        cxPromptCheck(Config::mainDb()->execSql(CREATE_T1), return false);
+    }
 
-    connect(ui->dcBn1, SIGNAL(clicked()), this, SLOT(dcBn1ClickedSlot()));
-    connect(ui->dcBn2, SIGNAL(clicked()), this, SLOT(dcBn2ClickedSlot()));
-    connect(ui->dlBn1, SIGNAL(clicked()), this, SLOT(dlBn1ClickedSlot()));
-//    connect(ui->dcLw1, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(dcLw1currentItemChanged()));
+    return 0;
+}
 
-    fn_init();
-    fn_helloDb1();
-
-    ui->buPathEd->setText(CxQString::gbkToQString(CxAppEnv::dataPath()));
-    ui->buFileNameEd->setText(CxQString::gbkToQString(
-        CxFileSystem::extractFilePrefixName(f_fpDb) + "-" + CxTime::currentDayString('-') + ".db"));
-
-    SQL::Con db((sqlite3 *) f_db->getDb());
-
+int fn_helloDb2()
+{
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
     {
         string sSql = "SELECT ManID, ManName, ManLogo FROM Man;";
-        sqlite3 *db = (sqlite3 *) f_db->getDb();
+        sqlite3 *db = (sqlite3 *) Config::mainDb()->getDb();
         int rc, ncols;
         sqlite3_stmt *stmt;
         const char *tail;
         rc = sqlite3_prepare(db, sSql.c_str(), sSql.size(), &stmt, &tail);
         if (rc != SQLITE_OK)
         {
-            return;
+            return -1;
         }
         rc = sqlite3_step(stmt);
         ncols = sqlite3_column_count(stmt);
@@ -354,26 +265,22 @@ MainWindow::MainWindow(QWidget *parent)
 //            CxFile::save(CxFileSystem::mergeFilePath(CxAppEnv::tempPath(), sManName + ".png"), sManLogo);
         }
     }
+    return 0;
+}
 
-    auto a = db.bindnquery<int, string, vector<char>>("SELECT ManID, ManName, ManLogo FROM Man;");
-    std::cout << "erg :" << std::endl;
-    for (auto x:a)
-    {
-        int iManID = std::get<0>(x);
-        string sManName = std::get<1>(x);
-        vector<char> sManLogo = std::get<2>(x);
-//        CxFile::save(CxFileSystem::mergeFilePath(CxAppEnv::tempPath(), sManName + ".png"), string(sManLogo.data(), sManLogo.size()));
-        std::cout << iManID << " " << sManName << " " << std::endl;
-        QPixmap pm;
-        pm.loadFromData((const uchar *) sManLogo.data(), (uint) sManLogo.size(), "JFIF");
-        QListWidgetItem *item = new QListWidgetItem(QIcon(pm), CxQString::gbkToQString(sManName));
-        ui->dcLw1->addItem(item);
-    }
 
-    QFile file(CxQString::gbkToQString(CxFileSystem::mergeFilePath(CxAppEnv::configPath(), "Aqua.qss")));
-    file.open(QFile::ReadOnly);
-    QString styleSheet = QLatin1String(file.readAll());
-    setStyleSheet(styleSheet);
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+
+    initData();
+
+    initUi();
+
+    initMenu();
+
+    refreshDcMan("");
 }
 
 MainWindow::~MainWindow()
@@ -396,65 +303,17 @@ void MainWindow::dlBn1ClickedSlot()
 
 }
 
-void MainWindow::on_dcEd1_textChanged(const QString &arg1)
-{
-
-}
-
 void MainWindow::on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    string s = CxQString::gbkToStdString(current->text());
-    SQL::Con db((sqlite3 *) f_db->getDb());
-    QListWidget *lw = ui->dcLw2;
-    lw->clear();
-    for (auto row: db.bindnquery<string, double, double, double, double, double>(CxString::format("SELECT ModelName, FToeMin, FToeMax, FToe, FToeSumMin, FToeSumMax FROM Vehicle WHERE ManName == '%s'", s.c_str())))
-    {
-        QListWidgetItem *item = new QListWidgetItem(CxQString::gbkToQString(std::get<0>(row)));
-        lw->addItem(item);
-    }
+    string sMan = CxQString::gbkToStdString(current->text());
+    ui->dcEd21->setText("");
+    refreshDcVeh(sMan, "");
 }
 
-void MainWindow::on_dcLw2_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
-{
 
-}
-
-void MainWindow::on_buPathBn_clicked()
+void MainWindow::on_dcLw2_currentRowChanged(int currentRow)
 {
-    QString dir = QFileDialog::getExistingDirectory(this, tr("选择备份的目录"),
-                                                    CxQString::gbkToQString(CxAppEnv::dataPath()),
-                                                    QFileDialog::ShowDirsOnly
-                                                    | QFileDialog::DontResolveSymlinks);
-}
-
-void MainWindow::on_buRunBn_clicked()
-{
-    string p = CxQString::gbkToStdString(ui->buPathEd->text());
-    string f = CxQString::gbkToStdString(ui->buFileNameEd->text());
-    string dst = CxFileSystem::mergeFilePath(p, f);
-    string src = f_fpDb;
-    string st = "失败";
-    string msg = "备份文件到：" + dst;
-    if (CxFileSystem::isExist(dst))
-    {
-        if (CxQDialog::ShowQuery(CxQString::gbkToQString(msg + "\n\n文件已存在，请确认是否要覆盖？")))
-        {
-            if (!CxFileSystem::deleteFile(dst))
-            {
-                CxQDialog::ShowPrompt("删除文件失败，备份停止！");
-                return;
-            }
-        }
-        else
-        {
-            return;
-        }
-    }
-    if (CxFileSystem::copyFile(src, dst) > 0)
-    {
-        st = "完成";
-    }
-    outInfo(msg + ". " + st + ". " + CxTime::currentSystemTimeString());
+    viewDcVeh(currentRow);
 }
 
 void MainWindow::outInfo(const QString &s)
@@ -465,4 +324,400 @@ void MainWindow::outInfo(const QString &s)
 void MainWindow::outInfo(const std::string &s)
 {
     outInfo(CxQString::gbkToQString(s));
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    if (watched == ui->dcImage1)
+    {
+        if (event->type() == QEvent::MouseButtonDblClick)
+        {
+            selectImage(1);
+        }
+    }
+    else if (watched == ui->dcImage2)
+    {
+        if (event->type() == QEvent::MouseButtonDblClick)
+        {
+            selectImage(2);
+        }
+    }
+    else if (watched == ui->dcImage3)
+    {
+        if (event->type() == QEvent::MouseButtonDblClick)
+        {
+            selectImage(3);
+        }
+    }
+    return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::initData()
+{
+//    fn_helloDb1();
+
+//    fn_helloDb2();
+
+    fn_createVehimage();
+}
+
+void MainWindow::initUi()
+{
+
+    QWebEngineView *webView = new QWebEngineView(ui->pnLeft);
+    QWebEnginePage *webPage = new QWebEnginePage(QWebEngineProfile::defaultProfile(), webView);
+    webView->setPage(webPage);
+    webView->setUrl(Config::defaultUrl());
+    ui->pnLeft->layout()->addWidget(webView);
+
+    connect(ui->dcBn1, SIGNAL(clicked()), this, SLOT(dcBn1ClickedSlot()));
+//    connect(ui->dcLw1, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(dcLw1currentItemChanged()));
+
+    QSize size = qApp->screens()[0]->size();
+    ui->dcImage1->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
+    ui->dcImage2->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
+    ui->dcImage3->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
+    setQss("Aqua.qss");
+}
+
+void MainWindow::initMenu()
+{
+//    openAction = new QAction(QIcon(":/images/doc-open"), tr("&Open"), this);
+//    openAction->setShortcuts(QKeySequence::Open);
+//    openAction->setStatusTip(tr("Open an existing file"));
+//    connect(openAction, &QAction::triggered, this, &MainWindow::open);
+//
+//    QMenu *file = menuBar()->addMenu(tr("&File"));
+//    file->addAction(openAction);
+
+    ui->dcImage1->installEventFilter(this);
+    ui->dcImage2->installEventFilter(this);
+    ui->dcImage3->installEventFilter(this);
+}
+
+void MainWindow::setQss(const std::string& fn)
+{
+    QFile file(CxQString::gbkToQString(CxFileSystem::mergeFilePath(CxAppEnv::configPath(), fn)));
+    file.open(QFile::ReadOnly);
+    QString styleSheet = QLatin1String(file.readAll());
+    setStyleSheet(styleSheet);
+}
+
+/**
+ * @param sFilter
+ */
+void MainWindow::refreshDcMan(const std::string &sFilter)
+{
+    string sql = "SELECT ManID, ManName, ManPy, ManLogo FROM Man;";
+    string fl = CxString::trim(sFilter);
+    if (fl.size() > 0)
+    {
+        string flUp = CxString::toUpper(fl);
+        sql = CxString::format("SELECT ManID, ManName, ManPy, ManLogo FROM Man WHERE ManName LIKE '\\%%s\\%' OR AND UPPER(ManName) like '\\%%s\\%' OR ManPy LIKE '\\%%s\\%' OR AND UPPER(ManPy) like '\\%%s\\%'", fl.c_str(), flUp.c_str(), fl.c_str(), flUp.c_str());
+    }
+
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+    auto a = db.bindnquery<int, string, string, vector<char>>(sql);
+    ui->dcLw1->clear();
+    for (auto x:a)
+    {
+        int iManID = std::get<0>(x);
+        string sManName = std::get<1>(x);
+        string sManPy = std::get<2>(x);
+        vector<char> sManLogo = std::get<3>(x);
+//        CxFile::save(CxFileSystem::mergeFilePath(CxAppEnv::tempPath(), sManName + ".png"), string(sManLogo.data(), sManLogo.size()));
+        std::cout << iManID << " " << sManName << " " << std::endl;
+        QPixmap pm;
+        pm.loadFromData((const uchar *) sManLogo.data(), (uint) sManLogo.size(), "JFIF");
+        QListWidgetItem *item = new QListWidgetItem(QIcon(pm), CxQString::gbkToQString(sManName));
+        ui->dcLw1->addItem(item);
+    }
+//    if (ui->dcLw1->count() > 0)
+//    {
+//        ui->dcLw1->setCurrentRow(0);
+//    }
+}
+
+/**
+ * @param sFilter
+ */
+void MainWindow::refreshDcVeh(const std::string& sMan, const std::string &sFilter)
+{
+    string fields = " VehID, ModelName, ModelPy,"
+                    " BeginDT, EndDT,"
+                    " Wheelbase, TrackDia,"
+                    " FTreadWidth, RTreadWidth,"
+                    " FToeMin, FToe, FToeMax,"
+                    " FCamberMin, FCamber, FCamberMax,"
+                    " KpiCasterMin, KpiCaster, KpiCasterMax,"
+                    " KpiCamberMin, KpiCamber, KpiCamberMax,"
+                    " RToeMin, RToe, RToeMax,"
+                    " RCamberMin, RCamber, RCamberMax,"
+                    " RThrustMin, RThrust, RThrustMax";
+    string sql = CxString::format("SELECT %s FROM Vehicle WHERE ManName='%s' ;", fields.c_str(), sMan.c_str());
+    string fl = CxString::trim(sFilter);
+    if (fl.size() > 0)
+    {
+        string flUp = CxString::toUpper(fl);
+//        sql = CxString::format("SELECT %s FROM Vehicle WHERE ModelName LIKE '\\%%s\\%' OR AND UPPER(ModelName) like '\\%%s\\%' OR ModelPy LIKE '\\%%s\\%' OR AND UPPER(ModelPy) like '\\%%s\\%'", fields.c_str(), fl.c_str(), flUp.c_str(), fl.c_str(), flUp.c_str());
+        sql = CxString::format("SELECT %s FROM Vehicle WHERE ManName='%s' AND ( ModelName LIKE '\\%%s\\%' OR ModelPy LIKE '\\%%s\\%' )", fields.c_str(), sMan.c_str(), fl.c_str(), fl.c_str());
+    }
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+    auto a = db.bindnquery<int, string, string, string, string
+        , double, double, double, double
+        , double, double, double
+        , double, double, double
+        , double, double, double
+        , double, double, double
+        , double, double, double
+        , double, double, double
+        , double, double, double>(sql);
+    f_vehicles.clear();
+    ui->dcLw2->clear();
+    for (auto x:a)
+    {
+        int VehID = std::get<0>(x);
+        string ModelName = std::get<1>(x);
+        string ModelPy = std::get<2>(x);
+        string BeginDT = std::get<3>(x);
+        string EndDT = std::get<4>(x);
+
+        double Wheelbase = std::get<5>(x); double TrackDia = std::get<6>(x);
+        double FTreadWidth = std::get<7>(x); double RTreadWidth = std::get<8>(x);
+
+        double FToeMin = std::get<9>(x); double FToe = std::get<10>(x); double FToeMax = std::get<11>(x);
+        double FCamberMin = std::get<12>(x); double FCamber = std::get<13>(x); double FCamberMax = std::get<14>(x);
+        double KpiCasterMin = std::get<15>(x); double  KpiCaster = std::get<16>(x); double KpiCasterMax = std::get<17>(x);
+        double KpiCamberMin = std::get<18>(x); double KpiCamber = std::get<19>(x); double KpiCamberMax = std::get<20>(x);
+
+        double RToeMin = std::get<21>(x); double RToe = std::get<22>(x); double RToeMax = std::get<23>(x);
+        double RCamberMin = std::get<24>(x); double RCamber = std::get<25>(x); double RCamberMax = std::get<26>(x);
+        double RThrustMin = std::get<27>(x); double  RThrust = std::get<28>(x); double RThrustMax = std::get<29>(x);
+
+        Vehicle vehicle{
+             VehID, ModelName, ModelPy,
+             BeginDT, EndDT,
+             Wheelbase, TrackDia,
+             FTreadWidth, RTreadWidth,
+             FToeMin, FToe, FToeMax,
+             FCamberMin, FCamber, FCamberMax,
+             KpiCasterMin, KpiCaster, KpiCasterMax,
+             KpiCamberMin, KpiCamber, KpiCamberMax,
+             RToeMin, RToe, RToeMax,
+             RCamberMin, RCamber, RCamberMax,
+             RThrustMin, RThrust, RThrustMax
+        };
+        f_vehicles.push_back(vehicle);
+        QListWidgetItem * oItem = new QListWidgetItem();
+        oItem->setData(Qt::UserRole, int(f_vehicles.size()));
+        oItem->setText(CxQString::gbkToQString(ModelName));
+        ui->dcLw2->addItem(oItem);
+    }
+//    if (ui->dcLw2->count() > 0)
+//    {
+//        ui->dcLw2->setCurrentRow(0);
+//    }
+}
+
+void MainWindow::viewDcVeh(int index)
+{
+    if (index < 0 || index > f_vehicles.size())
+    {
+        return;
+    }
+    Vehicle &veh = f_vehicles[index];
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+    auto a = db.bindnquery<string, string, string>(CxString::format("SELECT f, s, b FROM Vehimage WHERE vid=%d", veh.VehID));
+    if (a.size()>0)
+    {
+        auto &x = a[0];
+        loadImage(1, std::get<0>(x));
+        loadImage(2, std::get<0>(x));
+        loadImage(3, std::get<0>(x));
+    }
+    //    int VehID; std::string ModelName, ModelPy;
+    //    std::string BeginDT, EndDT;
+    //    double Wheelbase, TrackDia;
+    //    double FTreadWidth, RTreadWidth;
+    ui->dcEd31->setText(CxQString::gbkToQString(veh.ModelName));
+
+    ui->dcEd32->setText(CxQString::gbkToQString(veh.BeginDT));
+    ui->dcEd33->setText(CxQString::gbkToQString(veh.EndDT));
+
+    ui->dcEd34->setText(QString::number(veh.Wheelbase, 'g', 3));
+    ui->dcEd35->setText(QString::number(veh.TrackDia, 'g', 3));
+
+    ui->dcEd36->setText(QString::number(veh.FTreadWidth, 'g', 3));
+    ui->dcEd37->setText(QString::number(veh.RTreadWidth, 'g', 3));
+    //
+    //    double FToeMin, FToe, FToeMax;
+    //    double FCamberMin, FCamber, FCamberMax;
+    //    double KpiCasterMin, KpiCaster, KpiCasterMax;
+    //    double KpiCamberMin, KpiCamber, KpiCamberMax;
+    ui->dcEd41->setText(QString::number(veh.FToeMin, 'g', 3));
+    ui->dcEd42->setText(QString::number(veh.FToe, 'g', 3));
+    ui->dcEd43->setText(QString::number(veh.FToeMax, 'g', 3));
+
+    ui->dcEd44->setText(QString::number(veh.FCamberMin, 'g', 3));
+    ui->dcEd45->setText(QString::number(veh.FCamber, 'g', 3));
+    ui->dcEd46->setText(QString::number(veh.FCamberMax, 'g', 3));
+
+    ui->dcEd47->setText(QString::number(veh.KpiCasterMin, 'g', 3));
+    ui->dcEd48->setText(QString::number(veh.KpiCaster, 'g', 3));
+    ui->dcEd49->setText(QString::number(veh.KpiCasterMax, 'g', 3));
+
+    ui->dcEd4a->setText(QString::number(veh.KpiCamberMin, 'g', 3));
+    ui->dcEd4b->setText(QString::number(veh.KpiCamber, 'g', 3));
+    ui->dcEd4c->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    //
+    //    double RToeMin, RToe, RToeMax;
+    //    double RCamberMin, RCamber, RCamberMax;
+    //    double RThrustMin, RThrust, RThrustMax;
+    ui->dcEd51->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd52->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd53->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+
+    ui->dcEd54->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd55->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd56->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+
+    ui->dcEd57->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd58->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+    ui->dcEd59->setText(QString::number(veh.KpiCamberMax, 'g', 3));
+}
+
+void MainWindow::loadImage(int i, std::string &fn)
+{
+    QString fp = CxQString::gbkToQString(Config::imageFilePath(fn));
+    QLabel *lb = ui->dcImage1;
+    QLineEdit *ed = ui->dcImageEd1;
+    switch (i)
+    {
+        case 2:
+            lb = ui->dcImage2;
+            ed = ui->dcImageEd2;
+            break;
+        case 3:
+            lb = ui->dcImage2;
+            ed = ui->dcImageEd2;
+            break;
+        default:;
+    }
+    QImage image(fp);
+    ed->setText(fp);
+    lb->setPixmap(QPixmap::fromImage(image));
+}
+
+void MainWindow::selectImage(int i)
+{
+    QLabel *lb = ui->dcImage1;
+    QLineEdit *ed = ui->dcImageEd1;
+    switch (i)
+    {
+        case 2:
+            lb = ui->dcImage2;
+            ed = ui->dcImageEd2;
+            break;
+        case 3:
+            lb = ui->dcImage2;
+            ed = ui->dcImageEd2;
+            break;
+        default:;
+    }
+    QString selfilter = tr("JPEG (*.jpg *.jpeg)");
+    QString fp = QFileDialog::getOpenFileName(this, tr("选择的图像文件"),
+                                              "",
+                                              tr("JPEG (*.jpg *.jpeg);;TIFF (*.tif)" )
+//                                              CxQString::gbkToQString(Config::imagePath()),
+//                                              tr("All files (*.*);;JPEG (*.jpg *.jpeg);;TIFF (*.tif)" )
+                                              );
+    string fp2 = CxQString::gbkToStdString(fp);
+    if (CxFileSystem::isExist(fp2))
+    {
+        string dst = CxFileSystem::mergeFilePath(Config::imagePath(), CxTime::currentSystemTimeString('-', 't')) + CxFileSystem::extractFileSuffixName(fp2);
+        string src = fp2;
+        if (CxFileSystem::copyFile(src, dst) <= 0)
+        {
+            CxQDialog::ShowPrompt("拷贝图像文件失败，请检查空间与权限！");
+            return;
+        }
+
+        QPixmap p;
+        p.load(CxQString::gbkToQString(dst));
+        p.scaled(lb->size(), Qt::KeepAspectRatio);
+        lb->setScaledContents(true);
+        lb->setPixmap(p);
+        ed->setText(CxQString::gbkToQString(dst));
+//        lb->setPixmap(QPixmap::fromImage( QImage(CxQString::gbkToQString(dst)) ));
+    }
+}
+
+void MainWindow::on_dcEd11_textChanged(const QString &arg1)
+{
+    string sFilter = CxQString::gbkToStdString(ui->dcEd11->text());
+    refreshDcMan(sFilter);
+}
+
+void MainWindow::on_dcEd21_textChanged(const QString &arg1)
+{
+    if (! ui->dcLw1->currentItem())
+    {
+        return;
+    }
+    string sMan = CxQString::gbkToStdString(ui->dcLw1->currentItem()->text());
+    string sFilter = CxString::trim(CxQString::gbkToStdString(ui->dcEd12->text()));
+    refreshDcVeh(sMan, sFilter);
+}
+
+// add Man
+void MainWindow::on_dcBn1_clicked()
+{
+    string sSql = "INSERT INTO \"Man\"(\"ManID\", \"ManName\", \"ManPy\", \"LanID\", \"IsNative\", \"ManLogo\", \"Mem\", \"VIN\", \"recversion\") VALUES (10, 'BMW', 'BMW', 1033, 0, X'', NULL, '', NULL);";
+}
+
+// add Veh
+void MainWindow::on_dcBn61_clicked()
+{
+
+}
+
+// del Veh
+void MainWindow::on_dcBn62_clicked()
+{
+
+}
+
+// save Veh
+void MainWindow::on_dcBn63_clicked()
+{
+
+}
+
+void MainWindow::on_muDbExport_clicked()
+{
+    DbExportWindow dialog;
+
+//    dialog.setWindowTitle( sTitle );
+//    dialog.resize( 380, 220 );
+    dialog.setGeometry(
+        QStyle::alignedRect(
+            Qt::LeftToRight,
+            Qt::AlignCenter,
+            dialog.size(),
+            qApp->desktop()->availableGeometry()
+        )
+    );
+    if ( dialog.exec() == QDialog::Accepted )
+    {
+
+    }
+    else
+    {
+
+    }
+}
+
+void MainWindow::on_muDbBackup_clicked()
+{
+
 }

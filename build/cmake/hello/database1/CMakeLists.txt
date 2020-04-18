@@ -27,7 +27,7 @@ set_target_properties(hello_odbc1 PROPERTIES FOLDER ccxx/test)
 ###ccxx_sqlite
 
 set(SOURCE_FILES
-        main_sqlite1.cpp
+        test_sqlite1.cpp
         )
 
 mc_merge_file_path(${gs_project_hello_path}/database1 "${SOURCE_FILES}" SOURCE_FILEPATHS)

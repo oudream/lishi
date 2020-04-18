@@ -2,9 +2,9 @@
 
 #include <ccxx/cxdatabase_odbc.h>
 
-#include "test_dql1.hpp"
-#include "test_odbc_oracle1.hpp"
-#include "test_insert1.hpp"
+#include "test_dql1.cpp"
+#include "test_odbc_oracle1.cpp"
+#include "test_insert1.cpp"
 
 using namespace std;
 

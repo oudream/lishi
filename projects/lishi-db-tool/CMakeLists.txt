@@ -34,6 +34,15 @@ if(ANDROID)
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    dbbackupwindow.cpp
+    dbbackupwindow.h
+    dbbackupwindow.ui
+    dbexportwindow.cpp
+    dbexportwindow.h
+    dbexportwindow.ui
+    manwindow.cpp
+    manwindow.h
+    manwindow.ui
     ${TS_FILES}
   )
 else()
@@ -42,6 +51,15 @@ else()
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
+    dbbackupwindow.cpp
+    dbbackupwindow.h
+    dbbackupwindow.ui
+    dbexportwindow.cpp
+    dbexportwindow.h
+    dbexportwindow.ui
+    manwindow.cpp
+    manwindow.h
+    manwindow.ui
     ${TS_FILES}
   )
 endif()
