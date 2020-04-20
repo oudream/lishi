@@ -65,6 +65,13 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="QPushButton" name="closeBn">
+         <property name="text">
+          <string>X</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -215,7 +222,7 @@
               </property>
               <widget class="QWidget" name="tab">
                <attribute name="title">
-                <string>前</string>
+                <string>前-FRONT</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout">
                 <property name="leftMargin">
@@ -253,7 +260,7 @@
               </widget>
               <widget class="QWidget" name="tab_2">
                <attribute name="title">
-                <string>侧</string>
+                <string>侧-SIBE</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_3">
                 <property name="leftMargin">
@@ -285,7 +292,7 @@
               </widget>
               <widget class="QWidget" name="tab_3">
                <attribute name="title">
-                <string>后</string>
+                <string>后-BACK</string>
                </attribute>
                <layout class="QGridLayout" name="gridLayout_4">
                 <property name="leftMargin">

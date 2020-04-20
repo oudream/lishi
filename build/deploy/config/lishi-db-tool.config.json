@@ -5,7 +5,7 @@
       "tbname": "system",
       "rows": [
         {
-          "qss": "Aqua.qss",
+          "qss": "default.qss",
           "LanID": 1033
         }
       ]

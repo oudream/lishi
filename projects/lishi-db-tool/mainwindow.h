@@ -134,6 +134,8 @@ private slots:
 
     void on_muDbBackup_clicked();
 
+    void on_closeBn_clicked();
+
 private:
     void initData();
 

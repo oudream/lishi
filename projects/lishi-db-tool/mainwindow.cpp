@@ -9,13 +9,13 @@
 #include <QListView>
 #include <QListWidgetItem>
 #include <QScreen>
-
 #include <QWebEngineView>
 #include <QWebEnginePage>
 #include <QWebEngineProfile>
 #include <QStringList>
 #include <QUrl>
 #include <QDesktopWidget>
+#include <QShortcut>
 
 #include <tuple>
 #include <exception>
@@ -376,14 +376,30 @@ void MainWindow::initUi()
 //    connect(ui->dcLw1, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(dcLw1currentItemChanged()));
 
     QSize size = qApp->screens()[0]->size();
-    ui->dcImage1->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
-    ui->dcImage2->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
-    ui->dcImage3->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
+    ui->dcImage1->setMaximumSize(size.width() * 0.31, size.height() * 0.31);
+    ui->dcImage2->setMaximumSize(size.width() * 0.31, size.height() * 0.31);
+    ui->dcImage3->setMaximumSize(size.width() * 0.31, size.height() * 0.31);
     ui->dcImageEd1->setVisible(false);
     ui->dcImageEd2->setVisible(false);
     ui->dcImageEd3->setVisible(false);
 
     CxQWidget::setQSS(this, _qssFilePath);
+
+    QString fp = CxQString::gbkToQString(Config::imageFilePath("bg.jpg"));
+//    ui->menuBarTop->setStyleSheet("background-image: url("+fp+") 0 0 0 0 stretch stretch;");
+    ui->menuBarTop->setStyleSheet("background-image: url("+fp+") no-repeat;background-position: center center;");
+//    QPixmap p(fp);
+//    p.scaled(ui->menuBarTop->size(), Qt::KeepAspectRatio);
+//    QPalette palette;
+//    palette.setBrush(QPalette::Background, new QBrush(p));
+//    ui->menuBarTop->setPalette(palette);
+//
+//    QPainter painter(this);
+//    painter.drawPixmap(0, 0, QPixmap(fp).scaled(ui->menuBarTop->size()));
+//    QWidget::paintEvent(e);
+//
+//    ui->menuBarTop->setScaledContents(true);
+//    ui->menuBarTop.bac(p);
 }
 
 void MainWindow::initMenu()
@@ -399,6 +415,9 @@ void MainWindow::initMenu()
     ui->dcImage1->installEventFilter(this);
     ui->dcImage2->installEventFilter(this);
     ui->dcImage3->installEventFilter(this);
+
+    QShortcut *key = new QShortcut(QKeySequence(Qt::Key_Control, Qt::Key_S),this);
+    connect(key, SIGNAL(activated()), ui->dcBn63, SLOT(click()));
 }
 
 void MainWindow::initContent()
@@ -698,7 +717,7 @@ int MainWindow::insertUpdateVehImage(int VehID)
     }
     else
     {
-        sql = CxString::format("UPDATE \"Vehimage\" SET \"f\" = '%s', \"s\" = '%s', \"b\" = '%s' WHERE \"VehID\" = %d;", VehID, fn1.c_str(), fn2.c_str(), fn3.c_str());;
+        sql = CxString::format("UPDATE \"Vehimage\" SET \"f\" = '%s', \"s\" = '%s', \"b\" = '%s' WHERE \"VehID\" = %d;", fn1.c_str(), fn2.c_str(), fn3.c_str(), VehID);;
         msg = "UPDATE " + msg;
     }
     int r = Config::mainDb()->execSql(sql);
@@ -738,8 +757,8 @@ void MainWindow::viewOutDcVeh(const Vehicle &veh)
         ui->dcImageEd1->clear();
         ui->dcImage2->clear();
         ui->dcImageEd2->clear();
-        ui->dcImage2->clear();
-        ui->dcImageEd2->clear();
+        ui->dcImage3->clear();
+        ui->dcImageEd3->clear();
     }
     //    int VehID; std::string ModelName, ModelPy;
     //    std::string BeginDT, EndDT;
@@ -861,8 +880,8 @@ void MainWindow::loadImage(int i, std::string &fn)
             ed = ui->dcImageEd2;
             break;
         case 3:
-            lb = ui->dcImage2;
-            ed = ui->dcImageEd2;
+            lb = ui->dcImage3;
+            ed = ui->dcImageEd3;
             break;
         default:;
     }
@@ -873,9 +892,15 @@ void MainWindow::loadImage(int i, std::string &fn)
     }
     else
     {
-        QImage image(fp);
-        ed->setText(fp);
-        lb->setPixmap(QPixmap::fromImage(image));
+//        QImage image(fp);
+//        ed->setText(fp);
+//        lb->setPixmap(QPixmap::fromImage(image));
+        QPixmap p;
+        p.load(fp);
+        p.scaled(lb->size(), Qt::KeepAspectRatio);
+        lb->setScaledContents(true);
+        lb->setPixmap(p);
+        ed->setText(CxQString::gbkToQString(fn));
     }
 }
 
@@ -1029,6 +1054,7 @@ void MainWindow::on_dcBn63_clicked()
         if (! ui->dcBn61->isEnabled())
         {
             int VehID = Config::maxVehId()+1;
+            veh.VehID = VehID;
             string msg = CxString::format("添加车型{Vehicle: {ManID: %d, ManName: %s, VehID: %d, ModelName: %s}}", veh.ManID, veh.ManName.c_str(), veh.VehID, veh.ModelName.c_str());
             int r = insertVeh(VehID, veh);
             if (r > 0)
@@ -1050,14 +1076,12 @@ void MainWindow::on_dcBn63_clicked()
             if (f_vehicles.size() > 0 && ui->dcLw2->currentRow() >= 0 && ui->dcLw2->currentRow() < f_vehicles.size())
             {
                 int VehID = f_vehicles[ui->dcLw2->currentRow()].VehID;
+                veh.VehID = VehID;
                 int r = updateVeh(VehID, veh);
                 if (r > 0)
                 {
-                    if (f_vehicles.size() >= 0 && ui->dcLw2->currentRow() >= 0 && ui->dcLw2->currentRow() < f_vehicles.size())
-                    {
-                        f_vehicles[ui->dcLw2->currentRow()] =veh;
-                    }
-                    int r2 = insertUpdateVehImage(veh.VehID);
+                    f_vehicles[ui->dcLw2->currentRow()] =veh;
+                    int r2 = insertUpdateVehImage(VehID);
                     msg += " 成功, Image.Result: " + CxString::toString(r2) + CxTime::currentSystemTimeString();
                 }
                 else
@@ -1123,3 +1147,8 @@ void MainWindow::on_muDbBackup_clicked()
     }
 }
 
+
+void MainWindow::on_closeBn_clicked()
+{
+    this->close();
+}
