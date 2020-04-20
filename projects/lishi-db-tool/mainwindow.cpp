@@ -1016,7 +1016,7 @@ void MainWindow::on_dcBn62_clicked()
         return;
     }
     Vehicle veh = f_vehicles[ui->dcLw2->currentRow()];
-    if (! CxQDialog::ShowQuery("请确认删除车型: " + CxQString::gbkToQString(veh.ManName)))
+    if (! CxQDialog::ShowQuery("请确认删除车型: " + CxQString::gbkToQString(veh.ModelName)))
         return;
     int result = Config::mainDb()->execSql(CxString::format("DELETE FROM Vehicle WHERE VehID = %d;", veh.ManID));
     string msg = CxString::format("DELETE FROM Vehicle: {ModelName: %s, ManName: %s}, Status: %s} : ", veh.ManName.c_str(), veh.ModelName.c_str());
