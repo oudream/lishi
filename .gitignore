@@ -81,3 +81,5 @@ cmake-*
 /build/deploy/temp/
 /build/deploy/unix/
 CMakeLists.txt.user
+/build/deploy/data/
+/build/deploy/res/images/202*

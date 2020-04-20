@@ -18,10 +18,9 @@ DbExportWindow::DbExportWindow(QWidget *parent) :
 
     ui->epEd1->setText(CxQString::gbkToQString(Config::mainDbFilePath()));
 
-    std::map<int, std::string> langInfos = Config::langInfos();
-    for (typename std::map<int, std::string>::const_iterator it = langInfos.begin(); it != langInfos.end(); ++it)
+    for(auto & langInfo: Config::langInfos())
     {
-        ui->epCb2->addItem(CxQString::gbkToQString(it->second), it->first);
+        ui->epCb2->addItem(CxQString::gbkToQString(langInfo.second), langInfo.first);
     }
 }
 

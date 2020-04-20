@@ -3,6 +3,7 @@
 
 #include <QFileDialog>
 #include <QBuffer>
+#include <QScreen>
 
 #include <ccxx/cxqtutil.h>
 #include <ccxx/cxappenv.h>
@@ -20,11 +21,12 @@ ManWindow::ManWindow(QWidget *parent) :
 
     ui->maEd6->installEventFilter(this);
 
-    std::map<int, std::string> langInfos = Config::langInfos();
-    for (typename std::map<int, std::string>::const_iterator it = langInfos.begin(); it != langInfos.end(); ++it)
+    for(auto & langInfo: Config::langInfos())
     {
-        ui->maEd3->addItem(CxQString::gbkToQString(it->second), it->first);
+        ui->maEd3->addItem(CxQString::gbkToQString(langInfo.second), langInfo.first);
     }
+    QSize size = qApp->screens()[0]->size();
+    ui->maEd6->setMaximumSize(size.width() * 0.33, size.height() * 0.33);
 }
 
 ManWindow::~ManWindow()

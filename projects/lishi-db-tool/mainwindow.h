@@ -114,12 +114,6 @@ public:
     bool eventFilter(QObject *watched, QEvent *event);
 
 private slots:
-    void dcBn1ClickedSlot();
-
-    void dcBn2ClickedSlot();
-
-    void dlBn1ClickedSlot();
-
     void on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 
     void on_dcLw2_currentRowChanged(int currentRow);
@@ -149,11 +143,19 @@ private:
 
     void initMenu();
 
+    void initContent();
+
     void refreshDcMan(const std::string &sFilter);
 
-    void refreshDcVeh(const std::string &sMan, const std::string &sFilter);
+    int initVeh(const std::string &sMan);
 
-    int insertVeh(const Vehicle &veh);
+    void refreshDcVeh(const std::string &sFilter);
+
+    int insertVeh(int VehID, const Vehicle &veh);
+
+    int updateVeh(int VehID, const Vehicle &veh);
+
+    int insertUpdateVehImage(int VehID);
 
     void viewOutDcVeh(int index);
 

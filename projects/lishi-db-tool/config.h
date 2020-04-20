@@ -28,7 +28,7 @@ public:
 
     static int currentLanID();
 
-    static std::map<int, std::string> langInfos();
+    static const std::vector<std::pair<int, std::string>> & langInfos();
 
 };
 

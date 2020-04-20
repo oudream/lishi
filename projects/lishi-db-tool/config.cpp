@@ -83,8 +83,8 @@ void Config::setMaxVehId(int id)
     _maxVehId = id;
 }
 
-static std::map<int, std::string> _langInfos;
-std::map<int, std::string> Config::langInfos()
+static std::vector<std::pair<int, std::string>> _langInfos;
+const std::vector<std::pair<int, std::string>> & Config::langInfos()
 {
     if (_langInfos.size()==0)
     {
@@ -98,7 +98,7 @@ std::map<int, std::string> Config::langInfos()
             vector<string> ss1 = CxString::split(s, ',');
             if (ss1.size()>1)
             {
-                _langInfos[CxString::toInt32(ss1[0])] = s;
+                _langInfos.push_back(std::pair<int, std::string>(CxString::toInt32(ss1[0]), s));
             }
         }
     }

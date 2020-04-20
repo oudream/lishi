@@ -141,11 +141,11 @@ int fn_helloDb1()
 int fn_createVehimage()
 {
     const string CREATE_T1 = "CREATE TABLE \"Vehimage\" (\n"
-                             "  \"vid\" integer,\n"
+                             "  \"VehID\" integer,\n"
                              "  \"f\" text,\n"
                              "  \"s\" text,\n"
                              "  \"b\" text,\n"
-                             "  PRIMARY KEY (\"vid\")\n"
+                             "  PRIMARY KEY (\"VehID\")\n"
                              ");";
 
     string sCount;
@@ -160,12 +160,27 @@ int fn_createVehimage()
 
 int fn_cleanupDb()
 {
-    string sCount;
-    sCount = Config::mainDb()->queryValue("select count(VehID) from Vehicle where VehID is null or VehID = 0;");
-    if (CxString::toInt32(sCount) > 0)
     {
-        int result = Config::mainDb()->execSql("DELETE FROM Vehicle WHERE VehID is null or VehID = 0;");
-        cxPrompt() << "DELETE FROM Vehicle : " << result;
+        //select * from Vehicle
+        //where VehID in (select  VehID  from  Vehicle  group  by  VehID  having  count(VehID) > 1)
+        string sCount;
+        sCount = Config::mainDb()->queryValue("select count(VehID) from Vehicle where VehID in (select  VehID  from  Vehicle  group  by  VehID  having  count(VehID) > 1);");
+        if (CxString::toInt32(sCount) > 0)
+        {
+            int result = Config::mainDb()->execSql("DELETE FROM Vehicle WHERE VehID in (select VehID from Vehicle group by VehID having count(VehID) > 1);");
+            cxPrompt() << "DELETE REPEAT Vehicle : " << result;
+        }
+    }
+
+    {
+        // select * from Vehicle where VehID is null or VehID <= 0;
+        string sCount;
+        sCount = Config::mainDb()->queryValue("select count(VehID) from Vehicle where VehID is null or VehID = 0;");
+        if (CxString::toInt32(sCount) > 0)
+        {
+            int result = Config::mainDb()->execSql("DELETE FROM Vehicle WHERE VehID is null or VehID = 0;");
+            cxPrompt() << "DELETE INVALID Vehicle : " << result;
+        }
     }
 
     return 0;
@@ -262,46 +277,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     initMenu();
 
-    initMan("");
+    initContent();
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::dcBn2ClickedSlot()
-{
-
-}
-
-void MainWindow::dcBn1ClickedSlot()
-{
-
-}
-
-void MainWindow::dlBn1ClickedSlot()
-{
-
-}
-
-void MainWindow::on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
-{
-    string sMan = CxQString::gbkToStdString(current->text());
-    ui->dcEd21->setText("");
-    refreshDcVeh(sMan, "");
-}
-
-void MainWindow::on_dcLw2_currentRowChanged(int currentRow)
-{
-    if (f_vehicles.size() <= 0 || currentRow < 0 || currentRow >= f_vehicles.size())
-    {
-        return;
-    }
-
-    Vehicle &veh = f_vehicles[currentRow];
-    viewOutDcVeh(veh);
-    ui->dcBn61->setEnabled(true);
 }
 
 void MainWindow::outInfo(const QString &s)
@@ -352,6 +333,8 @@ void MainWindow::initData()
     fn_cleanupDb();
 
     fn_createVehimage();
+
+    initMan();
 }
 
 /**
@@ -383,14 +366,13 @@ int MainWindow::initMan()
 
 void MainWindow::initUi()
 {
-
     QWebEngineView *webView = new QWebEngineView(ui->pnLeft);
     QWebEnginePage *webPage = new QWebEnginePage(QWebEngineProfile::defaultProfile(), webView);
     webView->setPage(webPage);
     webView->setUrl(Config::defaultUrl());
     ui->pnLeft->layout()->addWidget(webView);
 
-    connect(ui->dcBn1, SIGNAL(clicked()), this, SLOT(dcBn1ClickedSlot()));
+//    connect(ui->dcBn1, SIGNAL(clicked()), this, SLOT(dcBn1ClickedSlot()));
 //    connect(ui->dcLw1, SIGNAL(currentItemChanged(QListWidgetItem *, QListWidgetItem *)), this, SLOT(dcLw1currentItemChanged()));
 
     QSize size = qApp->screens()[0]->size();
@@ -419,6 +401,45 @@ void MainWindow::initMenu()
     ui->dcImage3->installEventFilter(this);
 }
 
+void MainWindow::initContent()
+{
+    refreshDcMan("");
+}
+
+void MainWindow::on_dcLw1_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+{
+    if (current)
+    {
+        string sMan = CxQString::gbkToStdString(current->text());
+        initVeh(sMan);
+        refreshDcVeh("");
+        ui->dcEd21->setText("");
+    }
+}
+
+void MainWindow::on_dcLw2_currentRowChanged(int currentRow)
+{
+    if (f_vehicles.size() <= 0 || currentRow < 0 || currentRow >= f_vehicles.size())
+    {
+        return;
+    }
+
+    Vehicle &veh = f_vehicles[currentRow];
+    viewOutDcVeh(veh);
+    ui->dcBn61->setEnabled(true);
+}
+
+void MainWindow::on_dcEd11_textChanged(const QString &arg1)
+{
+    refreshDcMan(CxQString::gbkToStdString(arg1));
+}
+
+void MainWindow::on_dcEd21_textChanged(const QString &arg1)
+{
+    string sFilter = CxString::trim(CxQString::gbkToStdString(arg1));
+    refreshDcVeh(sFilter);
+}
+
 void MainWindow::refreshDcMan(const string &sFilter)
 {
     ui->dcLw1->clear();
@@ -443,7 +464,7 @@ void MainWindow::refreshDcMan(const string &sFilter)
 /**
  * @param sFilter
  */
-void MainWindow::refreshDcVeh(const std::string &sMan, const std::string &sFilter)
+int MainWindow::initVeh(const std::string &sMan)
 {
     string fields = " ManID, ManName, ManPy,"
                     " VehID, ModelName, ModelPy,"
@@ -458,17 +479,9 @@ void MainWindow::refreshDcVeh(const std::string &sMan, const std::string &sFilte
                     " RCamberMin, RCamber, RCamberMax,"
                     " RThrustMin, RThrust, RThrustMax";
     string sql = CxString::format("SELECT %s FROM Vehicle WHERE ManName='%s' ;", fields.c_str(), sMan.c_str());
-    string fl = CxString::trim(sFilter);
-    if (fl.size() > 0)
-    {
-        string flUp = CxString::toUpper(fl);
-//        sql = CxString::format("SELECT %s FROM Vehicle WHERE ModelName LIKE '\\%%s\\%' OR AND UPPER(ModelName) like '\\%%s\\%' OR ModelPy LIKE '\\%%s\\%' OR AND UPPER(ModelPy) like '\\%%s\\%'", fields.c_str(), fl.c_str(), flUp.c_str(), fl.c_str(), flUp.c_str());
-        sql = CxString::format("SELECT %s FROM Vehicle WHERE ManName='%s' AND ( ModelName LIKE '\\%%s\\%' OR ModelPy LIKE '\\%%s\\%' )", fields.c_str(), sMan.c_str(), fl.c_str(), fl.c_str());
-    }
     SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
     auto a = db.bindnquery<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(sql);
     f_vehicles.clear();
-    ui->dcLw2->clear();
     for (auto x:a)
     {
         int ManID = std::get<0>(x);
@@ -520,15 +533,32 @@ void MainWindow::refreshDcVeh(const std::string &sMan, const std::string &sFilte
             RThrustMin, RThrust, RThrustMax
         };
         f_vehicles.push_back(vehicle);
+    }
+    return f_vehicles.size();
+}
+
+/**
+ * @param sFilter
+ */
+void MainWindow::refreshDcVeh(const std::string &sFilter)
+{
+    ui->dcLw2->clear();
+    string sub = sFilter;
+    for (int i = 0; i < f_vehicles.size(); ++i)
+    {
+        Vehicle &veh = f_vehicles[i];
+        if (sub.size()>0)
+        {
+            if ( ! CxString::containCase(veh.ModelName, sub) && ! CxString::containCase(veh.ModelPy, sub))
+            {
+                continue;
+            }
+        }
         QListWidgetItem *oItem = new QListWidgetItem();
         oItem->setData(Qt::UserRole, int(f_vehicles.size()));
-        oItem->setText(CxQString::gbkToQString(ModelName));
+        oItem->setText(CxQString::gbkToQString(veh.ModelName));
         ui->dcLw2->addItem(oItem);
     }
-//    if (ui->dcLw2->count() > 0)
-//    {
-//        ui->dcLw2->setCurrentRow(0);
-//    }
 }
 
 /**
@@ -562,7 +592,7 @@ void MainWindow::refreshDcVeh(const std::string &sMan, const std::string &sFilte
  * @param veh
  * @return
  */
-int MainWindow::insertVeh(const Vehicle &veh)
+int MainWindow::insertVeh(int VehID, const Vehicle &veh)
 {
     string sSql = "INSERT INTO Vehicle(\n"
                   "        ManID, ManName, ManPy,\n"
@@ -593,9 +623,47 @@ int MainWindow::insertVeh(const Vehicle &veh)
                   "            );";
     vector<tuple<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>> rows;
     rows.push_back(tuple<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>
+                       (
+                           veh.ManID, veh.ManName, veh.ManPy,
+                           VehID, veh.ModelName, veh.ModelPy,
+                           veh.BeginDT, veh.EndDT,
+                           veh.Wheelbase, veh.TrackDia,
+                           veh.FTreadWidth, veh.RTreadWidth,
+                           veh.FToeMin, veh.FToe, veh.FToeMax,
+                           veh.FCamberMin, veh.FCamber, veh.FCamberMax,
+                           veh.KpiCasterMin, veh.KpiCaster, veh.KpiCasterMax,
+                           veh.KpiCamberMin, veh.KpiCamber, veh.KpiCamberMax,
+                           veh.RToeMin, veh.RToe, veh.RToeMax,
+                           veh.RCamberMin, veh.RCamber, veh.RCamberMax,
+                           veh.RThrustMin, veh.RThrust, veh.RThrustMax
+                       ));
+    SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
+    int r = db.bindnexec<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(sSql, rows);
+    return r;
+}
+
+int MainWindow::updateVeh(int VehID, const Vehicle &veh)
+{
+    string sSql = "    UPDATE Vehicle SET\n"
+                  "        ManID = ?, ManName = ?, ManPy = ?,\n"
+                  "        VehID = ?, ModelName = ?, ModelPy = ?,\n"
+                  "        BeginDT = ?, EndDT = ?,\n"
+                  "        Wheelbase = ?, TrackDia = ?,\n"
+                  "        FTreadWidth = ?, RTreadWidth = ?,\n"
+                  "        FToeMin = ?, FToe = ?, FToeMax = ?,\n"
+                  "        FCamberMin = ?, FCamber = ?, FCamberMax = ?,\n"
+                  "        KpiCasterMin = ?, KpiCaster = ?, KpiCasterMax = ?,\n"
+                  "        KpiCamberMin = ?, KpiCamber = ?, KpiCamberMax = ?,\n"
+                  "        RToeMin = ?, RToe = ?, RToeMax = ?,\n"
+                  "        RCamberMin = ?, RCamber = ?, RCamberMax = ?,\n"
+                  "        RThrustMin = ?, RThrust = ?, RThrustMax = ?\n"
+                  "    WHERE VehID = %d ;";
+    sSql = CxString::format(sSql.c_str(), VehID);
+    vector<tuple<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>> rows;
+    rows.push_back(tuple<int, string, string, int, string, string, string, string, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>
         (
             veh.ManID, veh.ManName, veh.ManPy,
-            veh.VehID, veh.ModelName, veh.ModelPy,
+            VehID, veh.ModelName, veh.ModelPy,
             veh.BeginDT, veh.EndDT,
             veh.Wheelbase, veh.TrackDia,
             veh.FTreadWidth, veh.RTreadWidth,
@@ -612,6 +680,33 @@ int MainWindow::insertVeh(const Vehicle &veh)
     return r;
 }
 
+int MainWindow::insertUpdateVehImage(int VehID)
+{
+    string fn1 = CxQString::gbkToStdString(ui->dcImageEd1->text());
+    string fn2 = CxQString::gbkToStdString(ui->dcImageEd2->text());
+    string fn3 = CxQString::gbkToStdString(ui->dcImageEd3->text());
+
+    string sCount;
+    sCount = Config::mainDb()->queryValue(CxString::format("select count(VehID) from Vehimage where VehID=%d;", VehID));
+    bool bAdd = CxString::toInt32(sCount) <= 0;
+    string sql;
+    string msg = " Vehimage, Status: ";
+    if (bAdd)
+    {
+        sql = CxString::format("INSERT INTO \"Vehimage\"(\"VehID\", \"f\", \"s\", \"b\") VALUES (%d, '%s', '%s', '%s');", VehID, fn1.c_str(), fn2.c_str(), fn3.c_str());
+        msg = "INSERT INTO " + msg;
+    }
+    else
+    {
+        sql = CxString::format("UPDATE \"Vehimage\" SET \"f\" = '%s', \"s\" = '%s', \"b\" = '%s' WHERE \"VehID\" = %d;", VehID, fn1.c_str(), fn2.c_str(), fn3.c_str());;
+        msg = "UPDATE " + msg;
+    }
+    int r = Config::mainDb()->execSql(sql);
+    msg += r > 0 ? " 成功" : " 失败";
+    outInfo(msg);
+    return r;
+}
+
 void MainWindow::viewOutDcVeh(int index)
 {
     if (index < 0 || index > f_vehicles.size())
@@ -623,19 +718,21 @@ void MainWindow::viewOutDcVeh(int index)
 
 void MainWindow::viewOutDcVeh(const Vehicle &veh)
 {
+    bool bImage = false;
     if (veh.VehID >= 0)
     {
         SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
-        auto a = db.bindnquery<string, string, string>(CxString::format("SELECT f, s, b FROM Vehimage WHERE vid=%d", veh.VehID));
+        auto a = db.bindnquery<string, string, string>(CxString::format("SELECT f, s, b FROM Vehimage WHERE VehID=%d", veh.VehID));
         if (a.size() > 0)
         {
             auto &x = a[0];
             loadImage(1, std::get<0>(x));
-            loadImage(2, std::get<0>(x));
-            loadImage(3, std::get<0>(x));
+            loadImage(2, std::get<1>(x));
+            loadImage(3, std::get<2>(x));
+            bImage = true;
         }
     }
-    else
+    if (! bImage)
     {
         ui->dcImage1->clear();
         ui->dcImageEd1->clear();
@@ -698,18 +795,12 @@ void MainWindow::viewOutDcVeh(const Vehicle &veh)
 
 Vehicle MainWindow::viewInDcVeh()
 {
-    if (f_vehicles.size() <= 0 || !ui->dcLw2->currentRow() < 0 || ui->dcLw2->currentRow() >= f_vehicles.size())
-    {
-        return Vehicle().init();
-    }
-
-//    Vehicle veh = f_vehicles[ui->dcLw2->currentRow()];
     Vehicle veh;
     veh.ModelName = CxQString::gbkToStdString(ui->dcEd31->text());
     veh.ModelPy = CxQString::gbkToStdString(ui->dcEd31_2->text());
 
-    veh.BeginDT = ui->dcEd32->text().toDouble();
-    veh.EndDT = ui->dcEd33->text().toDouble();
+    veh.BeginDT = CxQString::gbkToStdString(ui->dcEd32->text());
+    veh.EndDT = CxQString::gbkToStdString(ui->dcEd33->text());
 
     veh.Wheelbase = ui->dcEd34->text().toDouble();
     veh.TrackDia = ui->dcEd35->text().toDouble();
@@ -759,7 +850,8 @@ Vehicle MainWindow::viewInDcVeh()
 
 void MainWindow::loadImage(int i, std::string &fn)
 {
-    QString fp = CxQString::gbkToQString(Config::imageFilePath(fn));
+    string fp2 = Config::imageFilePath(fn);
+    QString fp = CxQString::gbkToQString(fp2);
     QLabel *lb = ui->dcImage1;
     QLineEdit *ed = ui->dcImageEd1;
     switch (i)
@@ -774,9 +866,17 @@ void MainWindow::loadImage(int i, std::string &fn)
             break;
         default:;
     }
-    QImage image(fp);
-    ed->setText(fp);
-    lb->setPixmap(QPixmap::fromImage(image));
+    if (! CxFileSystem::isExist(fp2))
+    {
+        lb->clear();
+        ed->clear();
+    }
+    else
+    {
+        QImage image(fp);
+        ed->setText(fp);
+        lb->setPixmap(QPixmap::fromImage(image));
+    }
 }
 
 void MainWindow::selectImage(int i)
@@ -805,39 +905,35 @@ void MainWindow::selectImage(int i)
     string fp2 = CxQString::gbkToStdString(fp);
     if (CxFileSystem::isExist(fp2))
     {
-        string dst = CxFileSystem::mergeFilePath(Config::imagePath(), CxTime::currentSystemTimeString('-', 't'))
-                     + CxFileSystem::extractFileSuffixName(fp2);
-        string src = fp2;
-        if (CxFileSystem::copyFile(src, dst) <= 0)
+        string fn;
+        if (! CxFileSystem::isSubDirectory(Config::imagePath(), fp2))
         {
-            CxQDialog::ShowPrompt("拷贝图像文件失败，请检查空间与权限！");
-            return;
+            fn = CxTime::currentSystemTimeString('-', 't') + CxFileSystem::extractFileSuffixName(fp2);
+            string dst = CxFileSystem::mergeFilePath(Config::imagePath(), fn);
+            string src = fp2;
+            if (CxFileSystem::copyFile(src, dst) <= 0)
+            {
+                CxQDialog::ShowPrompt("拷贝图像文件失败，请检查空间与权限！");
+                return;
+            }
+        }
+        else
+        {
+            fn = CxFileSystem::relativeFilePath(Config::imagePath(), fp2);
         }
 
         QPixmap p;
-        p.load(CxQString::gbkToQString(dst));
+        p.load(CxQString::gbkToQString(Config::imageFilePath(fn)));
         p.scaled(lb->size(), Qt::KeepAspectRatio);
         lb->setScaledContents(true);
         lb->setPixmap(p);
-        ed->setText(CxQString::gbkToQString(dst));
+        ed->setText(CxQString::gbkToQString(fn));
 //        lb->setPixmap(QPixmap::fromImage( QImage(CxQString::gbkToQString(dst)) ));
     }
-}
-
-void MainWindow::on_dcEd11_textChanged(const QString &arg1)
-{
-    refreshDcMan(CxQString::gbkToStdString(arg1));
-}
-
-void MainWindow::on_dcEd21_textChanged(const QString &arg1)
-{
-    if (!ui->dcLw1->currentItem())
+    else
     {
-        return;
+        outInfo(CxString::format("图像文件[%s]不存在，请重新选择!", fp2.c_str()));
     }
-    string sMan = CxQString::gbkToStdString(ui->dcLw1->currentItem()->text());
-    string sFilter = CxString::trim(CxQString::gbkToStdString(ui->dcEd12->text()));
-    refreshDcVeh(sMan, sFilter);
 }
 
 // add Man
@@ -866,7 +962,7 @@ void MainWindow::on_dcBn1_clicked()
             dialog.IsNative,
             dialog.ManLogo
         };
-        f_mans.push_back(Man{});
+        f_mans.push_back(man);
     }
     else
     {
@@ -890,26 +986,91 @@ void MainWindow::on_dcBn61_clicked()
 // del Veh
 void MainWindow::on_dcBn62_clicked()
 {
-
+    if (f_vehicles.size() <= 0 || !ui->dcLw2->currentRow() < 0 || ui->dcLw2->currentRow() >= f_vehicles.size())
+    {
+        return;
+    }
+    Vehicle veh = f_vehicles[ui->dcLw2->currentRow()];
+    if (! CxQDialog::ShowQuery("请确认删除车型: " + CxQString::gbkToQString(veh.ManName)))
+        return;
+    int result = Config::mainDb()->execSql(CxString::format("DELETE FROM Vehicle WHERE VehID = %d;", veh.ManID));
+    string msg = CxString::format("DELETE FROM Vehicle: {ModelName: %s, ManName: %s}, Status: %s} : ", veh.ManName.c_str(), veh.ModelName.c_str());
+    if (result > 0)
+    {
+        msg = CxString::format(msg.c_str(), "成功");
+        f_vehicles.erase(f_vehicles.begin() + ui->dcLw2->currentRow());
+        QListWidgetItem * oItem = ui->dcLw2->takeItem(ui->dcLw2->currentRow());
+        delete oItem;
+    }
+    else
+    {
+        msg = CxString::format(msg.c_str(), "失败");
+    }
+    outInfo(msg);
     ui->dcBn61->setEnabled(true);
 }
 
 // save Veh
 void MainWindow::on_dcBn63_clicked()
 {
-    string sManName = ui->dcLw1->currentItem() ? CxQString::gbkToStdString(ui->dcLw1->currentItem()->text()) : string();
-    if (sManName.empty())
+    if (f_vehicles.size() <= 0 || ui->dcLw1->currentRow() < 0 || ui->dcLw1->currentRow() >= f_mans.size())
     {
         CxQDialog::ShowPrompt("品牌不能为空，请选择品牌，再保存！");
         return;
     }
+    Man man = f_mans[ui->dcLw1->currentRow()];
     Vehicle veh = viewInDcVeh();
     if (veh.isValid())
     {
-        int iMaxId = Config::maxVehId()+1;
-        veh.VehID = iMaxId;
-        veh.ManID =
-        int r = insertVeh(veh);
+        veh.ManID = man.ManID;
+        veh.ManName = man.ManName;
+        veh.ManPy = man.ManPy;
+        // in Add Status
+        if (! ui->dcBn61->isEnabled())
+        {
+            int VehID = Config::maxVehId()+1;
+            string msg = CxString::format("添加车型{Vehicle: {ManID: %d, ManName: %s, VehID: %d, ModelName: %s}}", veh.ManID, veh.ManName.c_str(), veh.VehID, veh.ModelName.c_str());
+            int r = insertVeh(VehID, veh);
+            if (r > 0)
+            {
+                Config::setMaxVehId(VehID);
+                f_vehicles.push_back(veh);
+                int r2 = insertUpdateVehImage(VehID);
+                msg += " 成功, Image.Result: " + CxString::toString(r2) + CxTime::currentSystemTimeString();
+            }
+            else
+            {
+                msg += " 失败！" + CxTime::currentSystemTimeString();
+            }
+            outInfo(msg);
+        }
+        else
+        {
+            string msg = CxString::format("更新车型{Vehicle: {ManID: %d, ManName: %s, VehID: %d, ModelName: %s}}", veh.ManID, veh.ManName.c_str(), veh.VehID, veh.ModelName.c_str());
+            if (f_vehicles.size() > 0 && ui->dcLw2->currentRow() >= 0 && ui->dcLw2->currentRow() < f_vehicles.size())
+            {
+                int VehID = f_vehicles[ui->dcLw2->currentRow()].VehID;
+                int r = updateVeh(VehID, veh);
+                if (r > 0)
+                {
+                    if (f_vehicles.size() >= 0 && ui->dcLw2->currentRow() >= 0 && ui->dcLw2->currentRow() < f_vehicles.size())
+                    {
+                        f_vehicles[ui->dcLw2->currentRow()] =veh;
+                    }
+                    int r2 = insertUpdateVehImage(veh.VehID);
+                    msg += " 成功, Image.Result: " + CxString::toString(r2) + CxTime::currentSystemTimeString();
+                }
+                else
+                {
+                    msg += " 失败！" + CxTime::currentSystemTimeString();
+                }
+            }
+            else
+            {
+                msg += " 失败！（界面错误，请重启！）" + CxTime::currentSystemTimeString();
+            }
+            outInfo(msg);
+        }
         ui->dcBn61->setEnabled(true);
     }
     else
@@ -961,3 +1122,4 @@ void MainWindow::on_muDbBackup_clicked()
     {
     }
 }
+
