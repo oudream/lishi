@@ -41,14 +41,14 @@
        <item>
         <widget class="QPushButton" name="muDbExport">
          <property name="text">
-          <string>数据库导出</string>
+          <string>　数据库导出　</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPushButton" name="muDbBackup">
          <property name="text">
-          <string>数据库备份</string>
+          <string>　数据库备份　</string>
          </property>
         </widget>
        </item>
@@ -68,7 +68,7 @@
        <item>
         <widget class="QPushButton" name="closeBn">
          <property name="text">
-          <string>X</string>
+          <string>　X　</string>
          </property>
         </widget>
        </item>

@@ -47,12 +47,25 @@ void ManWindow::on_maBn1_clicked()
     ManPy = CxQString::gbkToStdString(ui->maEd2->text());
     LanID = ui->maEd3->currentData().toInt();
     IsNative = ui->maEd4->isChecked() ? 1 : 0;
-    QByteArray arr;
-    QBuffer buffer(&arr);
-    buffer.open(QIODevice::WriteOnly);
-    ManLogoImage.save(&buffer, "JPEG");
-    ManLogo.resize(arr.size());
-    memcpy(ManLogo.data(), arr.data(), arr.size());
+//    QByteArray arr;
+//    QBuffer buffer(&arr);
+//    buffer.open(QIODevice::WriteOnly);
+//    ManLogoImage.save(&buffer, "JPEG");
+//    ManLogo.resize(arr.size());
+//    memcpy(ManLogo.data(), arr.data(), arr.size());
+//
+//
+//    QByteArray inByteArray;
+//    QBuffer inBuffer( &inByteArray );
+//    inBuffer.open( QIODevice::WriteOnly );
+//    ManLogoImage.save( &inBuffer, "PNG" ); // write inPixmap into inByteArray in PNG format
+
+
+    if (ManName.empty() || ManPy.empty() || ManLogo.size()<=0)
+    {
+        CxQDialog::ShowPrompt("[ 品牌名称 | 品牌拼音 | LOGO图标 ] 不能为空！请重新填选！");
+        return;
+    }
 
     SQL::Con db((sqlite3 *) Config::mainDb()->getDb());
 
@@ -87,9 +100,16 @@ bool ManWindow::eventFilter(QObject *watched, QEvent *event)
                                                       CxQString::gbkToQString(Config::imagePath()),
                                                       tr("All files (*.*);;JPEG (*.jpg *.jpeg);;TIFF (*.tif)"));
 
+            string s = CxFile::load(CxQString::gbkToStdString(fp));
+            ManLogo.resize(s.size());
+            memcpy(ManLogo.data(), s.data(), s.size());
             ManLogoImage = QImage(fp);
+            QPixmap p = QPixmap::fromImage(ManLogoImage);
+//            p.load(fp);
+            p.scaled(ui->maEd6->size(), Qt::KeepAspectRatio);
+            ui->maEd6->setScaledContents(true);
+            ui->maEd6->setPixmap(p);
             ui->maEd6_2->setText(fp);
-            ui->maEd6->setPixmap(QPixmap::fromImage(ManLogoImage));
         }
     }
     return QDialog::eventFilter(watched, event);

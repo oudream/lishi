@@ -121,7 +121,7 @@ namespace SQL
     template<>
     inline int set_single(sqlite3_stmt *ppsm, int iCol, const std::vector<char> & v)
     {
-        return sqlite3_bind_text(ppsm, iCol, v.data(), v.size(), 0);
+        return sqlite3_bind_blob(ppsm, iCol, v.data(), v.size(), 0);
     }
 
     template<std::size_t I = 0, typename... Tp>

@@ -383,7 +383,7 @@ void MainWindow::initUi()
     ui->dcImageEd2->setVisible(false);
     ui->dcImageEd3->setVisible(false);
 
-    CxQWidget::setQSS(this, _qssFilePath);
+//    CxQWidget::setQSS(this, _qssFilePath);
 
     QString fp = CxQString::gbkToQString(Config::imageFilePath("bg.jpg"));
 //    ui->menuBarTop->setStyleSheet("background-image: url("+fp+") 0 0 0 0 stretch stretch;");
@@ -988,6 +988,10 @@ void MainWindow::on_dcBn1_clicked()
             dialog.ManLogo
         };
         f_mans.push_back(man);
+        QPixmap pm;
+        pm.loadFromData((const uchar *) man.ManLogo.data(), (uint) man.ManLogo.size(), "JFIF");
+        QListWidgetItem *item = new QListWidgetItem(QIcon(pm), CxQString::gbkToQString(man.ManName));
+        ui->dcLw1->addItem(item);
     }
     else
     {
@@ -1018,18 +1022,18 @@ void MainWindow::on_dcBn62_clicked()
     Vehicle veh = f_vehicles[ui->dcLw2->currentRow()];
     if (! CxQDialog::ShowQuery("请确认删除车型: " + CxQString::gbkToQString(veh.ModelName)))
         return;
-    int result = Config::mainDb()->execSql(CxString::format("DELETE FROM Vehicle WHERE VehID = %d;", veh.ManID));
-    string msg = CxString::format("DELETE FROM Vehicle: {ModelName: %s, ManName: %s}, Status: %s} : ", veh.ManName.c_str(), veh.ModelName.c_str());
+    int result = Config::mainDb()->execSql(CxString::format("DELETE FROM Vehicle WHERE VehID = %d;", veh.VehID));
+    string msg = CxString::format("DELETE FROM Vehicle: {ModelName: %s, ManName: %s}, Status: ", veh.ModelName.c_str(), veh.ManName.c_str());
     if (result > 0)
     {
-        msg = CxString::format(msg.c_str(), "成功");
+        msg += "成功";
         f_vehicles.erase(f_vehicles.begin() + ui->dcLw2->currentRow());
         QListWidgetItem * oItem = ui->dcLw2->takeItem(ui->dcLw2->currentRow());
         delete oItem;
     }
     else
     {
-        msg = CxString::format(msg.c_str(), "失败");
+        msg += "失败";
     }
     outInfo(msg);
     ui->dcBn61->setEnabled(true);
@@ -1038,7 +1042,7 @@ void MainWindow::on_dcBn62_clicked()
 // save Veh
 void MainWindow::on_dcBn63_clicked()
 {
-    if (f_vehicles.size() <= 0 || ui->dcLw1->currentRow() < 0 || ui->dcLw1->currentRow() >= f_mans.size())
+    if (f_mans.size() <= 0 || ui->dcLw1->currentRow() < 0 || ui->dcLw1->currentRow() >= f_mans.size())
     {
         CxQDialog::ShowPrompt("品牌不能为空，请选择品牌，再保存！");
         return;
@@ -1051,11 +1055,12 @@ void MainWindow::on_dcBn63_clicked()
         veh.ManName = man.ManName;
         veh.ManPy = man.ManPy;
         // in Add Status
-        if (! ui->dcBn61->isEnabled())
+
+        if (! ui->dcBn61->isEnabled() || f_vehicles.size() < 0 || ui->dcLw2->currentRow() < 0 || ui->dcLw2->currentRow() >= f_vehicles.size())
         {
             int VehID = Config::maxVehId()+1;
             veh.VehID = VehID;
-            string msg = CxString::format("添加车型{Vehicle: {ManID: %d, ManName: %s, VehID: %d, ModelName: %s}}", veh.ManID, veh.ManName.c_str(), veh.VehID, veh.ModelName.c_str());
+            string msg = CxString::format("添加车型{Vehicle: {ManID: %d, ManName: %s, VehID: %d, ModelName: %s}}", veh.ManID, veh.ManName.c_str(), VehID, veh.ModelName.c_str());
             int r = insertVeh(VehID, veh);
             if (r > 0)
             {
@@ -1073,25 +1078,18 @@ void MainWindow::on_dcBn63_clicked()
         else
         {
             string msg = CxString::format("更新车型{Vehicle: {ManID: %d, ManName: %s, VehID: %d, ModelName: %s}}", veh.ManID, veh.ManName.c_str(), veh.VehID, veh.ModelName.c_str());
-            if (f_vehicles.size() > 0 && ui->dcLw2->currentRow() >= 0 && ui->dcLw2->currentRow() < f_vehicles.size())
+            int VehID = f_vehicles[ui->dcLw2->currentRow()].VehID;
+            veh.VehID = VehID;
+            int r = updateVeh(VehID, veh);
+            if (r > 0)
             {
-                int VehID = f_vehicles[ui->dcLw2->currentRow()].VehID;
-                veh.VehID = VehID;
-                int r = updateVeh(VehID, veh);
-                if (r > 0)
-                {
-                    f_vehicles[ui->dcLw2->currentRow()] =veh;
-                    int r2 = insertUpdateVehImage(VehID);
-                    msg += " 成功, Image.Result: " + CxString::toString(r2) + CxTime::currentSystemTimeString();
-                }
-                else
-                {
-                    msg += " 失败！" + CxTime::currentSystemTimeString();
-                }
+                f_vehicles[ui->dcLw2->currentRow()] =veh;
+                int r2 = insertUpdateVehImage(VehID);
+                msg += " 成功, Image.Result: " + CxString::toString(r2) + CxTime::currentSystemTimeString();
             }
             else
             {
-                msg += " 失败！（界面错误，请重启！）" + CxTime::currentSystemTimeString();
+                msg += " 失败！" + CxTime::currentSystemTimeString();
             }
             outInfo(msg);
         }
@@ -1146,7 +1144,6 @@ void MainWindow::on_muDbBackup_clicked()
     {
     }
 }
-
 
 void MainWindow::on_closeBn_clicked()
 {
