@@ -383,7 +383,7 @@ void MainWindow::initUi()
     ui->dcImageEd2->setVisible(false);
     ui->dcImageEd3->setVisible(false);
 
-//    CxQWidget::setQSS(this, _qssFilePath);
+    CxQWidget::setQSS(this, _qssFilePath);
 
     QString fp = CxQString::gbkToQString(Config::imageFilePath("bg.jpg"));
 //    ui->menuBarTop->setStyleSheet("background-image: url("+fp+") 0 0 0 0 stretch stretch;");
